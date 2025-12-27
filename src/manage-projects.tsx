@@ -1,7 +1,7 @@
 import { ActionPanel, Action, List, confirmAlert, Alert } from "@raycast/api";
 import { useProjects } from "./hooks/useProjects";
 import { ProjectForm } from "./components";
-import { SHORTCUTS, Icons } from "./constants";
+import { SHORTCUTS, Icons, getIconForGroup } from "./constants";
 import { Project } from "./types";
 
 // ============================================
@@ -144,10 +144,11 @@ function getAccessories(project: Project): List.Item.Accessory[] {
     });
   }
 
-  // Group tag
+  // Group tag with icon
   if (project.group) {
     accessories.push({
-      tag: project.group,
+      tag: { value: project.group },
+      icon: getIconForGroup(project.group, project.groupIcon),
       tooltip: `Group: ${project.group}`,
     });
   }

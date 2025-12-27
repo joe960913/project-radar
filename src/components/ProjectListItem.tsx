@@ -1,6 +1,7 @@
 import { List } from "@raycast/api";
 import { ReactNode } from "react";
 import { Project } from "../types";
+import { getIconForGroup } from "../constants";
 import ProjectActions from "./ProjectActions";
 
 // ============================================
@@ -86,10 +87,11 @@ function getAccessories(project: Project): List.Item.Accessory[] {
     });
   }
 
-  // Group tag
+  // Group tag with icon
   if (project.group) {
     accessories.push({
-      tag: project.group,
+      tag: { value: project.group },
+      icon: getIconForGroup(project.group, project.groupIcon),
       tooltip: `Group: ${project.group}`,
     });
   }
