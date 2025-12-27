@@ -1,6 +1,6 @@
 import { ActionPanel, Action, Icon, confirmAlert, Alert } from "@raycast/api";
 import { Project, ProjectWithStatus } from "../types";
-import { IDE_CONFIGS, SHORTCUTS } from "../constants";
+import { SHORTCUTS } from "../constants";
 import { openProjectWithToast } from "../lib/ide";
 import { createProjectDeeplink } from "../utils/deeplink";
 import ProjectForm from "./ProjectForm";
@@ -40,37 +40,39 @@ export default function ProjectActions({ project, onRefresh, onDelete }: Project
       {/* Primary Action */}
       <ActionPanel.Section>
         <Action
-          icon={Icon.ArrowRight}
-          title={`Open in ${IDE_CONFIGS[project.ide].name}`}
+          icon={Icon.AppWindowSidebarRight}
+          title={`Open in ${project.app.name}`}
           onAction={handleOpen}
         />
       </ActionPanel.Section>
 
-      {/* CRUD Actions */}
-      <ActionPanel.Section>
-        <Action.Push
-          icon={Icon.Plus}
-          title="Add Project"
-          shortcut={SHORTCUTS.ADD_PROJECT as any}
-          target={<ProjectForm onSave={onRefresh} />}
-        />
+      {/* Project Management */}
+      <ActionPanel.Section title="Project">
         <Action.Push
           icon={Icon.Pencil}
-          title="Edit Project"
+          title="Edit"
           shortcut={SHORTCUTS.EDIT_PROJECT as any}
           target={<ProjectForm project={project} onSave={onRefresh} />}
         />
-        <Action
-          icon={Icon.Trash}
-          title="Delete Project"
-          style={Action.Style.Destructive}
-          shortcut={SHORTCUTS.DELETE_PROJECT as any}
-          onAction={handleDelete}
+        <Action.Push
+          icon={Icon.Plus}
+          title="Add New"
+          shortcut={SHORTCUTS.ADD_PROJECT as any}
+          target={<ProjectForm onSave={onRefresh} />}
         />
       </ActionPanel.Section>
 
-      {/* Quicklink */}
-      <ActionPanel.Section>
+      {/* File & Path */}
+      <ActionPanel.Section title="Path">
+        <Action.ShowInFinder
+          path={project.paths[0]}
+          shortcut={SHORTCUTS.SHOW_IN_FINDER as any}
+        />
+        <Action.CopyToClipboard
+          title="Copy Path"
+          content={project.paths.join("\n")}
+          shortcut={SHORTCUTS.COPY_PATH as any}
+        />
         <Action.CreateQuicklink
           title="Create Quicklink"
           shortcut={SHORTCUTS.CREATE_QUICKLINK as any}
@@ -81,16 +83,14 @@ export default function ProjectActions({ project, onRefresh, onDelete }: Project
         />
       </ActionPanel.Section>
 
-      {/* Utility Actions */}
+      {/* Destructive */}
       <ActionPanel.Section>
-        <Action.ShowInFinder
-          path={project.paths[0]}
-          shortcut={SHORTCUTS.SHOW_IN_FINDER as any}
-        />
-        <Action.CopyToClipboard
-          title="Copy Path"
-          content={project.paths.join("\n")}
-          shortcut={SHORTCUTS.COPY_PATH as any}
+        <Action
+          icon={Icon.Trash}
+          title="Delete"
+          style={Action.Style.Destructive}
+          shortcut={SHORTCUTS.DELETE_PROJECT as any}
+          onAction={handleDelete}
         />
       </ActionPanel.Section>
     </ActionPanel>

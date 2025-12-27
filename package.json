@@ -35,6 +35,13 @@
       "subtitle": "Repo Radar",
       "description": "Open a project by ID (used by quicklinks)",
       "mode": "no-view"
+    },
+    {
+      "name": "clear-data",
+      "title": "Clear All Data",
+      "subtitle": "Repo Radar",
+      "description": "Clear all saved project data",
+      "mode": "no-view"
     }
   ],
   "dependencies": {

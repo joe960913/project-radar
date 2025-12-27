@@ -6,11 +6,14 @@ import {
   Toast,
   useNavigation,
   Icon,
+  launchCommand,
+  LaunchType,
 } from "@raycast/api";
 import { useState } from "react";
-import { Project, IDE, ProjectFormProps } from "../types";
+import { ProjectFormProps, AppInfo } from "../types";
 import { addProject, updateProject, isAliasExists } from "../lib/storage";
-import { IDE_CONFIGS } from "../constants";
+import { useApplications } from "../hooks/useApplications";
+import { createProjectDeeplink } from "../utils/deeplink";
 
 // ============================================
 // Form Values Interface
@@ -19,7 +22,8 @@ import { IDE_CONFIGS } from "../constants";
 interface FormValues {
   alias: string;
   paths: string[];
-  ide: IDE;
+  appBundleId: string;
+  createQuicklink: boolean;
 }
 
 // ============================================
@@ -29,6 +33,7 @@ interface FormValues {
 export default function ProjectForm({ project, onSave }: ProjectFormProps) {
   const { pop } = useNavigation();
   const [aliasError, setAliasError] = useState<string | undefined>();
+  const { applications, isLoading: appsLoading } = useApplications();
 
   const isEditing = !!project;
 
@@ -56,33 +61,76 @@ export default function ProjectForm({ project, onSave }: ProjectFormProps) {
       return;
     }
 
+    // Validate app selection
+    if (!values.appBundleId) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Validation Error",
+        message: "Please select an application",
+      });
+      return;
+    }
+
+    // Find the selected app
+    const selectedApp = applications.find((app) => app.bundleId === values.appBundleId);
+    if (!selectedApp) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Validation Error",
+        message: "Selected application not found",
+      });
+      return;
+    }
+
     try {
+      const appInfo: AppInfo = {
+        name: selectedApp.name,
+        bundleId: selectedApp.bundleId,
+        path: selectedApp.path,
+      };
+
       if (isEditing && project) {
         await updateProject(project.id, {
           alias: values.alias.trim(),
           paths: values.paths,
-          ide: values.ide,
+          app: appInfo,
         });
         await showToast({
           style: Toast.Style.Success,
           title: "Project updated",
           message: values.alias,
         });
+        onSave();
+        pop();
       } else {
-        await addProject({
+        const newProject = await addProject({
           alias: values.alias.trim(),
           paths: values.paths,
-          ide: values.ide,
+          app: appInfo,
         });
         await showToast({
           style: Toast.Style.Success,
           title: "Project added",
           message: values.alias,
         });
-      }
+        onSave();
 
-      onSave();
-      pop();
+        if (values.createQuicklink) {
+          const deeplink = createProjectDeeplink(newProject.id);
+          await launchCommand({
+            ownerOrAuthorName: "raycast",
+            extensionName: "raycast",
+            name: "create-quicklink",
+            type: LaunchType.UserInitiated,
+            context: {
+              name: newProject.alias,
+              link: deeplink,
+            },
+          });
+        } else {
+          pop();
+        }
+      }
     } catch (error) {
       await showToast({
         style: Toast.Style.Failure,
@@ -100,12 +148,13 @@ export default function ProjectForm({ project, onSave }: ProjectFormProps) {
 
   return (
     <Form
-      navigationTitle={isEditing ? "Edit Project" : "Add Project"}
+      isLoading={appsLoading}
+      navigationTitle={isEditing ? "Edit Project" : "New Project"}
       actions={
         <ActionPanel>
           <Action.SubmitForm
-            title={isEditing ? "Save Changes" : "Add Project"}
-            icon={isEditing ? Icon.Check : Icon.Plus}
+            title={isEditing ? "Save" : "Create"}
+            icon={Icon.Check}
             onSubmit={handleSubmit}
           />
         </ActionPanel>
@@ -114,37 +163,50 @@ export default function ProjectForm({ project, onSave }: ProjectFormProps) {
       <Form.TextField
         id="alias"
         title="Alias"
-        placeholder="e.g., abc, p2, frontend"
-        info="A short name to quickly find and open this project"
+        placeholder="my-project"
+        info="Short name for quick access"
         defaultValue={project?.alias}
         error={aliasError}
         onChange={handleAliasChange}
+        autoFocus
       />
 
       <Form.FilePicker
         id="paths"
-        title="Project Paths"
+        title="Paths"
         allowMultipleSelection
         canChooseDirectories
         canChooseFiles={false}
-        info="Select one or more project folders"
+        info="Select project folders"
         defaultValue={project?.paths}
       />
 
       <Form.Dropdown
-        id="ide"
-        title="IDE"
-        info="Which IDE to open the project with"
-        defaultValue={project?.ide || "cursor"}
+        id="appBundleId"
+        title="Open With"
+        defaultValue={appsLoading ? undefined : project?.app?.bundleId}
       >
-        {(Object.keys(IDE_CONFIGS) as IDE[]).map((ide) => (
+        {applications.map((app) => (
           <Form.Dropdown.Item
-            key={ide}
-            value={ide}
-            title={IDE_CONFIGS[ide].name}
+            key={app.bundleId}
+            value={app.bundleId}
+            title={app.name}
+            icon={{ fileIcon: app.path }}
           />
         ))}
       </Form.Dropdown>
+
+      {!isEditing && (
+        <>
+          <Form.Separator />
+          <Form.Checkbox
+            id="createQuicklink"
+            label="Create Quicklink"
+            info="Access this project from Raycast root search"
+            defaultValue={true}
+          />
+        </>
+      )}
     </Form>
   );
 }

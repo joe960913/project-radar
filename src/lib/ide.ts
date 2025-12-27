@@ -1,25 +1,16 @@
-import { showToast, Toast, showHUD } from "@raycast/api";
-import { exec } from "child_process";
-import { promisify } from "util";
+import { showToast, Toast, showHUD, open } from "@raycast/api";
 import { Project } from "../types";
-import { IDE_CONFIGS } from "../constants";
-
-const execAsync = promisify(exec);
 
 // ============================================
-// IDE Operations
+// IDE/App Operations
 // ============================================
 
-export async function openProjectInIDE(project: Project): Promise<boolean> {
-  const ideConfig = IDE_CONFIGS[project.ide];
-
+export async function openProjectInApp(project: Project): Promise<boolean> {
   try {
-    // Use CLI command to open all paths in one window (multi-root workspace)
-    // Example: cursor path1 path2 path3
-    const quotedPaths = project.paths.map((p) => `"${p}"`).join(" ");
-    const command = `${ideConfig.cliCommand} ${quotedPaths}`;
-
-    await execAsync(command);
+    // Open all paths with the specified application
+    for (const path of project.paths) {
+      await open(path, project.app.bundleId);
+    }
     return true;
   } catch (error) {
     await showToast({
@@ -32,22 +23,20 @@ export async function openProjectInIDE(project: Project): Promise<boolean> {
 }
 
 export async function openProjectWithHUD(project: Project): Promise<void> {
-  const ideConfig = IDE_CONFIGS[project.ide];
-  const success = await openProjectInIDE(project);
+  const success = await openProjectInApp(project);
 
   if (success) {
-    await showHUD(`Opening ${project.alias} in ${ideConfig.name}`);
+    await showHUD(`Opening ${project.alias} in ${project.app.name}`);
   }
 }
 
 export async function openProjectWithToast(project: Project): Promise<void> {
-  const ideConfig = IDE_CONFIGS[project.ide];
-  const success = await openProjectInIDE(project);
+  const success = await openProjectInApp(project);
 
   if (success) {
     await showToast({
       style: Toast.Style.Success,
-      title: `Opening in ${ideConfig.name}`,
+      title: `Opening in ${project.app.name}`,
       message: project.alias,
     });
   }

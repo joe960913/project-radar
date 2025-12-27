@@ -1,6 +1,5 @@
-import { List, Icon, Color } from "@raycast/api";
+import { List, Icon } from "@raycast/api";
 import { Project, ProjectWithStatus } from "../types";
-import { IDE_CONFIGS } from "../constants";
 import ProjectActions from "./ProjectActions";
 
 // ============================================
@@ -14,12 +13,16 @@ interface ProjectListItemProps {
 }
 
 export default function ProjectListItem({ project, onRefresh, onDelete }: ProjectListItemProps) {
+  const subtitle = formatSubtitle(project);
+  const keywords = [project.alias, project.app.name, ...project.paths];
+
   return (
     <List.Item
       key={project.id}
-      icon={Icon.Folder}
+      icon={{ fileIcon: project.app.path }}
       title={project.alias}
-      subtitle={project.paths[0]}
+      subtitle={subtitle}
+      keywords={keywords}
       accessories={getAccessories(project)}
       actions={
         <ProjectActions
@@ -36,38 +39,44 @@ export default function ProjectListItem({ project, onRefresh, onDelete }: Projec
 // Helper Functions
 // ============================================
 
+function formatSubtitle(project: ProjectWithStatus): string {
+  const pathName = project.paths[0].split("/").pop() || project.paths[0];
+  return pathName;
+}
+
 function getAccessories(project: ProjectWithStatus): List.Item.Accessory[] {
   const accessories: List.Item.Accessory[] = [];
 
-  // IDE tag
-  accessories.push({
-    tag: { value: IDE_CONFIGS[project.ide].name, color: Color.Blue },
-  });
-
-  // Path count
-  if (project.paths.length > 1) {
+  // Git branch (if git repo)
+  if (project.gitStatus?.isGitRepo && project.gitStatus.branch) {
     accessories.push({
-      text: `${project.paths.length} paths`,
-      icon: Icon.Folder,
+      icon: Icon.CodeBlock,
+      text: project.gitStatus.branch,
+      tooltip: `Branch: ${project.gitStatus.branch}`,
     });
   }
 
-  // Git status
-  if (project.gitStatus?.isGitRepo) {
-    if (project.gitStatus.branch) {
-      accessories.push({
-        tag: { value: project.gitStatus.branch, color: Color.Purple },
-        icon: Icon.Code,
-      });
-    }
-
-    if (project.gitStatus.hasChanges) {
-      accessories.push({
-        icon: { source: Icon.Circle, tintColor: Color.Orange },
-        tooltip: "Uncommitted changes",
-      });
-    }
+  // Uncommitted changes indicator
+  if (project.gitStatus?.hasChanges) {
+    accessories.push({
+      icon: Icon.Dot,
+      tooltip: "Uncommitted changes",
+    });
   }
+
+  // Path count (if multiple)
+  if (project.paths.length > 1) {
+    accessories.push({
+      text: `${project.paths.length}`,
+      icon: Icon.Folder,
+      tooltip: `${project.paths.length} paths`,
+    });
+  }
+
+  // App name (rightmost)
+  accessories.push({
+    text: project.app.name,
+  });
 
   return accessories;
 }

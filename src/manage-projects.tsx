@@ -1,7 +1,7 @@
-import { ActionPanel, Action, List, Icon, Color, confirmAlert, Alert } from "@raycast/api";
+import { ActionPanel, Action, List, Icon, confirmAlert, Alert } from "@raycast/api";
 import { useProjectsSimple } from "./hooks/useProjects";
 import { ProjectForm } from "./components";
-import { IDE_CONFIGS, SHORTCUTS } from "./constants";
+import { SHORTCUTS } from "./constants";
 import { Project } from "./types";
 
 // ============================================
@@ -29,13 +29,13 @@ export default function ManageProjects() {
   return (
     <List
       isLoading={isLoading}
-      searchBarPlaceholder="Search projects to manage..."
+      searchBarPlaceholder="Search projects..."
     >
       {projects.length === 0 && !isLoading ? (
         <List.EmptyView
-          icon={Icon.Folder}
-          title="No Projects Yet"
-          description="Press Cmd+N to add your first project"
+          icon={Icon.Document}
+          title="No Projects"
+          description="Add your first project to get started"
           actions={
             <ActionPanel>
               <Action.Push
@@ -51,13 +51,16 @@ export default function ManageProjects() {
         projects.map((project) => (
           <List.Item
             key={project.id}
-            icon={Icon.Folder}
+            icon={{ fileIcon: project.app.path }}
             title={project.alias}
-            subtitle={project.paths.join(", ")}
+            subtitle={project.paths[0].split("/").pop()}
+            keywords={[project.alias, project.app.name, ...project.paths]}
             accessories={[
-              { tag: { value: IDE_CONFIGS[project.ide].name, color: Color.Blue } },
-              { text: `${project.paths.length} path${project.paths.length > 1 ? "s" : ""}` },
-            ]}
+              project.paths.length > 1
+                ? { text: `${project.paths.length}`, icon: Icon.Folder, tooltip: `${project.paths.length} paths` }
+                : null,
+              { text: project.app.name },
+            ].filter(Boolean) as List.Item.Accessory[]}
             actions={
               <ActionPanel>
                 <ActionPanel.Section>
@@ -75,19 +78,24 @@ export default function ManageProjects() {
                 </ActionPanel.Section>
 
                 <ActionPanel.Section>
+                  <Action.ShowInFinder
+                    path={project.paths[0]}
+                    shortcut={SHORTCUTS.SHOW_IN_FINDER as any}
+                  />
+                  <Action.CopyToClipboard
+                    title="Copy Path"
+                    content={project.paths.join("\n")}
+                    shortcut={SHORTCUTS.COPY_PATH as any}
+                  />
+                </ActionPanel.Section>
+
+                <ActionPanel.Section>
                   <Action
                     icon={Icon.Trash}
                     title="Delete Project"
                     style={Action.Style.Destructive}
                     shortcut={SHORTCUTS.DELETE_PROJECT as any}
                     onAction={() => handleDelete(project)}
-                  />
-                </ActionPanel.Section>
-
-                <ActionPanel.Section>
-                  <Action.ShowInFinder
-                    path={project.paths[0]}
-                    shortcut={SHORTCUTS.SHOW_IN_FINDER as any}
                   />
                 </ActionPanel.Section>
               </ActionPanel>

@@ -6,12 +6,20 @@ export interface Project {
   id: string;
   alias: string;
   paths: string[];
-  ide: IDE;
+  app: AppInfo; // Changed from `ide: IDE` to support any application
   createdAt: number;
   updatedAt: number;
 }
 
-export type IDE = "cursor" | "vscode" | "webstorm" | "idea" | "zed" | "sublime" | "atom";
+// ============================================
+// Application Types
+// ============================================
+
+export interface AppInfo {
+  name: string;
+  bundleId: string;
+  path: string;
+}
 
 // ============================================
 // Git Types
@@ -23,17 +31,6 @@ export interface GitStatus {
   hasChanges?: boolean;
   ahead?: number;
   behind?: number;
-}
-
-// ============================================
-// IDE Types
-// ============================================
-
-export interface IDEConfig {
-  name: string;
-  bundleId: string;
-  icon: string;
-  cliCommand: string;
 }
 
 // ============================================

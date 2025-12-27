@@ -13,9 +13,9 @@ interface EmptyViewProps {
 export default function EmptyView({ onProjectAdded }: EmptyViewProps) {
   return (
     <List.EmptyView
-      icon={Icon.Folder}
-      title="No Projects Yet"
-      description="Press Cmd+N to add your first project"
+      icon={Icon.Document}
+      title="No Projects"
+      description="Add your first project to get started"
       actions={
         <ActionPanel>
           <Action.Push
