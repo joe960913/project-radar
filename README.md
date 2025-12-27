@@ -1,78 +1,65 @@
-# Repo Radar
+<p align="center">
+  <img src="assets/extension-icon.png" width="128" height="128" alt="Repo Radar Icon">
+</p>
 
-A Raycast extension for lightning-fast project switching. Create custom aliases for your projects and open them instantly in your preferred IDE with Git status insights.
+<h1 align="center">Repo Radar</h1>
+
+<p align="center">
+  <strong>Blazing-fast project launcher for Raycast</strong>
+</p>
+
+<p align="center">
+  <a href="https://www.raycast.com"><img src="https://img.shields.io/badge/Raycast-FF6363?style=flat-square&logo=raycast&logoColor=white" alt="Raycast"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="MIT License"></a>
+  <img src="https://img.shields.io/badge/Platform-macOS%20%7C%20Windows-lightgrey?style=flat-square" alt="Platform">
+</p>
+
+---
 
 ## Features
 
-- **Custom Aliases** - Name your projects anything you want (`abc`, `p2`, `frontend`) for instant access
-- **Multi-Path Support** - Open multiple folders in one IDE window as a multi-root workspace
-- **IDE Flexibility** - Choose your IDE per project: Cursor, VS Code, WebStorm, IntelliJ IDEA, Zed, Sublime Text, Atom
-- **Git Insights** - See current branch and uncommitted changes at a glance
-- **Quicklinks** - Create Raycast quicklinks to open projects directly from root search
+| Feature | Description |
+|---------|-------------|
+| **Custom Aliases** | Name projects anything (`api`, `web`, `docs`) for instant access |
+| **Multi-Path Workspaces** | Open multiple folders in one IDE window |
+| **IDE + Terminal** | Open in IDE, Terminal, or both simultaneously |
+| **Git Status** | See current branch and uncommitted changes at a glance |
+| **Favorites & Groups** | Organize projects with favorites and custom groups |
+| **Smart Sorting** | Sort by recent, favorites, frequency, or name |
+| **Quicklinks** | Access projects directly from Raycast root search |
 
-## Installation
+## Supported Apps
 
-1. Clone this repository
-2. Run `npm install`
-3. Run `npm run dev` to start development mode
-4. The extension will appear in Raycast
+<details>
+<summary><strong>IDEs</strong></summary>
 
-## Usage
+- Cursor, VS Code, VS Code Insiders
+- WebStorm, IntelliJ IDEA, PyCharm, GoLand, PhpStorm, RubyMine, Rider, CLion, DataGrip, Fleet
+- Xcode, Android Studio
+- Zed, Sublime Text, Nova, BBEdit, TextMate, MacVim, VimR
 
-### Adding a Project
+</details>
 
-1. Open "Search Projects" command in Raycast
-2. Press `Cmd+N` to add a new project
-3. Enter an alias (e.g., `myapp`)
-4. Select one or more project folders
-5. Choose your preferred IDE
+<details>
+<summary><strong>Terminals</strong></summary>
 
-### Opening a Project
+- Terminal.app, iTerm, Warp, Ghostty, Kitty, Alacritty, WezTerm, Hyper
+- Windows Terminal, PowerShell, Command Prompt
 
-- Open "Search Projects" and type your alias, then press `Enter`
-- Or create a Quicklink (`Cmd+Shift+Q`) to access directly from Raycast root search
+</details>
 
-### Keyboard Shortcuts
+## Keyboard Shortcuts
 
 | Shortcut | Action |
 |----------|--------|
-| `Enter` | Open project in IDE |
-| `Cmd+N` | Add new project |
-| `Cmd+E` | Edit project |
-| `Cmd+Backspace` | Delete project |
-| `Cmd+Shift+Q` | Create Quicklink |
-| `Cmd+F` | Show in Finder |
-| `Cmd+Shift+C` | Copy path |
+| `Enter` | Open project |
+| `Cmd+N` | Add project |
+| `Cmd+E` | Edit |
+| `Cmd+S` | Toggle favorite |
+| `Cmd+Backspace` | Delete |
 
-## Project Structure
+---
 
-```
-src/
-├── components/          # UI components
-├── constants/           # IDE configs, shortcuts
-├── hooks/               # React hooks
-├── lib/                 # Core logic (storage, git, ide)
-├── types/               # TypeScript types
-├── utils/               # Utility functions
-└── *.tsx                # Command entry points
-```
-
-## Supported IDEs
-
-- Cursor
-- Visual Studio Code
-- WebStorm
-- IntelliJ IDEA
-- Zed
-- Sublime Text
-- Atom
-
-## Requirements
-
-- macOS
-- Raycast
-- IDE CLI tools installed (e.g., `cursor`, `code` commands available in terminal)
-
-## License
-
-MIT
+<p align="center">
+  <sub>Open source under MIT License. Contributions welcome!</sub>
+</p>
