@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getApplications, Application } from "@raycast/api";
+import { getApplications } from "@raycast/api";
 import { AppInfo } from "../types";
 
 // ============================================
@@ -62,20 +62,14 @@ export function useApplications(): UseApplicationsReturn {
       setIsLoading(true);
       try {
         const installedApps = await getApplications();
-        const installedBundleIds = new Set(
-          installedApps.map((app) => app.bundleId).filter(Boolean)
-        );
+        const installedBundleIds = new Set(installedApps.map((app) => app.bundleId).filter(Boolean));
 
         // Filter: only show supported IDEs that are installed
-        const availableIDEs = SUPPORTED_IDES.filter((ide) =>
-          installedBundleIds.has(ide.bundleId)
-        );
+        const availableIDEs = SUPPORTED_IDES.filter((ide) => installedBundleIds.has(ide.bundleId));
 
         // Get full app info (path)
         const appInfos: AppInfo[] = availableIDEs.map((ide) => {
-          const installedApp = installedApps.find(
-            (app) => app.bundleId === ide.bundleId
-          );
+          const installedApp = installedApps.find((app) => app.bundleId === ide.bundleId);
           return {
             name: ide.name,
             bundleId: ide.bundleId,
@@ -140,20 +134,14 @@ export function useTerminals(): UseTerminalsReturn {
       setIsLoading(true);
       try {
         const installedApps = await getApplications();
-        const installedBundleIds = new Set(
-          installedApps.map((app) => app.bundleId).filter(Boolean)
-        );
+        const installedBundleIds = new Set(installedApps.map((app) => app.bundleId).filter(Boolean));
 
         // Filter: only show supported terminals that are installed
-        const availableTerminals = SUPPORTED_TERMINALS.filter((terminal) =>
-          installedBundleIds.has(terminal.bundleId)
-        );
+        const availableTerminals = SUPPORTED_TERMINALS.filter((terminal) => installedBundleIds.has(terminal.bundleId));
 
         // Get full app info (path)
         const appInfos: AppInfo[] = availableTerminals.map((terminal) => {
-          const installedApp = installedApps.find(
-            (app) => app.bundleId === terminal.bundleId
-          );
+          const installedApp = installedApps.find((app) => app.bundleId === terminal.bundleId);
           return {
             name: terminal.name,
             bundleId: terminal.bundleId,

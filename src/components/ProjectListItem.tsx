@@ -1,7 +1,6 @@
 import { List } from "@raycast/api";
 import { ReactNode } from "react";
 import { Project, ProjectWithStatus } from "../types";
-import { Icons } from "../constants";
 import ProjectActions from "./ProjectActions";
 
 // ============================================
@@ -26,9 +25,7 @@ export default function ProjectListItem({
   sortActions,
 }: ProjectListItemProps) {
   const subtitle = formatSubtitle(project);
-  const keywords = [project.alias, project.app.name, project.group, ...project.paths].filter(
-    Boolean
-  ) as string[];
+  const keywords = [project.alias, project.app.name, project.group, ...project.paths].filter(Boolean) as string[];
 
   return (
     <List.Item

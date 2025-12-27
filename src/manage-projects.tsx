@@ -31,10 +31,7 @@ export default function ManageProjects() {
   };
 
   return (
-    <List
-      isLoading={isLoading}
-      searchBarPlaceholder="Search projects..."
-    >
+    <List isLoading={isLoading} searchBarPlaceholder="Search projects...">
       {projects.length === 0 && !isLoading ? (
         <List.EmptyView
           icon={Icons.Document}
@@ -45,7 +42,7 @@ export default function ManageProjects() {
               <Action.Push
                 icon={Icons.Plus}
                 title="Add Project"
-                shortcut={SHORTCUTS.ADD_PROJECT as any}
+                shortcut={SHORTCUTS.ADD_PROJECT}
                 target={<ProjectForm groups={groups} onSave={refresh} />}
               />
             </ActionPanel>
@@ -71,26 +68,23 @@ export default function ManageProjects() {
                   <Action
                     icon={project.isFavorite ? Icons.Star : Icons.StarFilled}
                     title={project.isFavorite ? "Remove from Favorites" : "Add to Favorites"}
-                    shortcut={SHORTCUTS.TOGGLE_FAVORITE as any}
+                    shortcut={SHORTCUTS.TOGGLE_FAVORITE}
                     onAction={() => handleToggleFavorite(project)}
                   />
                   <Action.Push
                     icon={Icons.Plus}
                     title="Add Project"
-                    shortcut={SHORTCUTS.ADD_PROJECT as any}
+                    shortcut={SHORTCUTS.ADD_PROJECT}
                     target={<ProjectForm groups={groups} onSave={refresh} />}
                   />
                 </ActionPanel.Section>
 
                 <ActionPanel.Section>
-                  <Action.ShowInFinder
-                    path={project.paths[0]}
-                    shortcut={SHORTCUTS.SHOW_IN_FINDER as any}
-                  />
+                  <Action.ShowInFinder path={project.paths[0]} shortcut={SHORTCUTS.SHOW_IN_FINDER} />
                   <Action.CopyToClipboard
                     title="Copy Path"
                     content={project.paths.join("\n")}
-                    shortcut={SHORTCUTS.COPY_PATH as any}
+                    shortcut={SHORTCUTS.COPY_PATH}
                   />
                 </ActionPanel.Section>
 
@@ -99,7 +93,7 @@ export default function ManageProjects() {
                     icon={Icons.Trash}
                     title="Delete Project"
                     style={Action.Style.Destructive}
-                    shortcut={SHORTCUTS.DELETE_PROJECT as any}
+                    shortcut={SHORTCUTS.DELETE_PROJECT}
                     onAction={() => handleDelete(project)}
                   />
                 </ActionPanel.Section>

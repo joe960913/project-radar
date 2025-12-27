@@ -22,7 +22,7 @@ export default function EmptyView({ groups = [], onProjectAdded }: EmptyViewProp
           <Action.Push
             icon={Icons.Plus}
             title="Add Project"
-            shortcut={SHORTCUTS.ADD_PROJECT as any}
+            shortcut={SHORTCUTS.ADD_PROJECT}
             target={<ProjectForm groups={groups} onSave={onProjectAdded} />}
           />
         </ActionPanel>

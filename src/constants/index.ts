@@ -1,3 +1,5 @@
+import { Keyboard } from "@raycast/api";
+
 // Re-export icons
 export { Icons } from "./icons";
 
@@ -13,7 +15,7 @@ export const STORAGE_KEYS = {
 // UI Constants
 // ============================================
 
-export const SHORTCUTS = {
+export const SHORTCUTS: Record<string, Keyboard.Shortcut> = {
   ADD_PROJECT: { modifiers: ["cmd"], key: "n" },
   EDIT_PROJECT: { modifiers: ["cmd"], key: "e" },
   DELETE_PROJECT: { modifiers: ["cmd"], key: "backspace" },
@@ -22,7 +24,7 @@ export const SHORTCUTS = {
   CREATE_QUICKLINK: { modifiers: ["cmd", "shift"], key: "q" },
   TOGGLE_FAVORITE: { modifiers: ["cmd"], key: "s" },
   SET_GROUP: { modifiers: ["cmd"], key: "g" },
-} as const;
+};
 
 // ============================================
 // Default Groups
@@ -78,13 +80,13 @@ export function supportsMultiWorkspace(bundleId: string): boolean {
 
 // Known terminal application bundle IDs
 export const TERMINAL_APPS: readonly string[] = [
-  "com.apple.Terminal",           // Terminal.app
-  "com.googlecode.iterm2",        // iTerm2
-  "dev.warp.Warp-Stable",         // Warp
-  "com.github.wez.wezterm",       // WezTerm
-  "net.kovidgoyal.kitty",         // Kitty
-  "co.zeit.hyper",                // Hyper
-  "com.microsoft.VSCode",         // VS Code (has integrated terminal)
+  "com.apple.Terminal", // Terminal.app
+  "com.googlecode.iterm2", // iTerm2
+  "dev.warp.Warp-Stable", // Warp
+  "com.github.wez.wezterm", // WezTerm
+  "net.kovidgoyal.kitty", // Kitty
+  "co.zeit.hyper", // Hyper
+  "com.microsoft.VSCode", // VS Code (has integrated terminal)
 ] as const;
 
 // Check if an app is a terminal

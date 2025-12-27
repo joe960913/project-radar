@@ -29,11 +29,12 @@ function sortProjects<T extends Project>(projects: T[], sortBy: SortOption = "sm
     if (!a.isFavorite && b.isFavorite) return 1;
 
     switch (sortBy) {
-      case "recent":
+      case "recent": {
         // By last opened time (most recent first)
         const aOpened = a.lastOpenedAt || 0;
         const bOpened = b.lastOpenedAt || 0;
         return bOpened - aOpened;
+      }
 
       case "alphabetical":
         // Alphabetically by alias
@@ -44,12 +45,13 @@ function sortProjects<T extends Project>(projects: T[], sortBy: SortOption = "sm
         return b.createdAt - a.createdAt;
 
       case "smart":
-      default:
+      default: {
         // Smart: recent > created (with decay)
         const now = Date.now();
         const aScore = calculateSmartScore(a, now);
         const bScore = calculateSmartScore(b, now);
         return bScore - aScore;
+      }
     }
   });
 }
@@ -61,11 +63,15 @@ function calculateSmartScore(project: Project, now: number): number {
   // Recency boost: recently opened projects get higher scores
   if (project.lastOpenedAt) {
     const hoursAgo = (now - project.lastOpenedAt) / (1000 * 60 * 60);
-    if (hoursAgo < 1) score += 100;        // Last hour
-    else if (hoursAgo < 24) score += 80;   // Today
-    else if (hoursAgo < 168) score += 50;  // This week
-    else if (hoursAgo < 720) score += 20;  // This month
-    else score += 5;                        // Older
+    if (hoursAgo < 1)
+      score += 100; // Last hour
+    else if (hoursAgo < 24)
+      score += 80; // Today
+    else if (hoursAgo < 168)
+      score += 50; // This week
+    else if (hoursAgo < 720)
+      score += 20; // This month
+    else score += 5; // Older
   }
 
   // Creation date as tiebreaker
@@ -126,28 +132,34 @@ export function useProjects(): UseProjectsReturn {
     }
   }, [sortBy]);
 
-  const deleteProject = useCallback(async (project: Project): Promise<boolean> => {
-    const success = await removeProject(project.id);
-    if (success) {
+  const deleteProject = useCallback(
+    async (project: Project): Promise<boolean> => {
+      const success = await removeProject(project.id);
+      if (success) {
+        await loadProjects();
+        await showToast({
+          style: Toast.Style.Success,
+          title: "Project deleted",
+          message: project.alias,
+        });
+      }
+      return success;
+    },
+    [loadProjects],
+  );
+
+  const toggleFavorite = useCallback(
+    async (project: Project): Promise<void> => {
+      const isFavorite = await toggleFavoriteStorage(project.id);
       await loadProjects();
       await showToast({
         style: Toast.Style.Success,
-        title: "Project deleted",
+        title: isFavorite ? "Added to favorites" : "Removed from favorites",
         message: project.alias,
       });
-    }
-    return success;
-  }, [loadProjects]);
-
-  const toggleFavorite = useCallback(async (project: Project): Promise<void> => {
-    const isFavorite = await toggleFavoriteStorage(project.id);
-    await loadProjects();
-    await showToast({
-      style: Toast.Style.Success,
-      title: isFavorite ? "Added to favorites" : "Removed from favorites",
-      message: project.alias,
-    });
-  }, [loadProjects]);
+    },
+    [loadProjects],
+  );
 
   useEffect(() => {
     loadProjects();
@@ -201,28 +213,34 @@ export function useProjectsSimple(): UseProjectsSimpleReturn {
     }
   }, []);
 
-  const deleteProject = useCallback(async (project: Project): Promise<boolean> => {
-    const success = await removeProject(project.id);
-    if (success) {
+  const deleteProject = useCallback(
+    async (project: Project): Promise<boolean> => {
+      const success = await removeProject(project.id);
+      if (success) {
+        await loadProjects();
+        await showToast({
+          style: Toast.Style.Success,
+          title: "Project deleted",
+          message: project.alias,
+        });
+      }
+      return success;
+    },
+    [loadProjects],
+  );
+
+  const toggleFavorite = useCallback(
+    async (project: Project): Promise<void> => {
+      const isFavorite = await toggleFavoriteStorage(project.id);
       await loadProjects();
       await showToast({
         style: Toast.Style.Success,
-        title: "Project deleted",
+        title: isFavorite ? "Added to favorites" : "Removed from favorites",
         message: project.alias,
       });
-    }
-    return success;
-  }, [loadProjects]);
-
-  const toggleFavorite = useCallback(async (project: Project): Promise<void> => {
-    const isFavorite = await toggleFavoriteStorage(project.id);
-    await loadProjects();
-    await showToast({
-      style: Toast.Style.Success,
-      title: isFavorite ? "Added to favorites" : "Removed from favorites",
-      message: project.alias,
-    });
-  }, [loadProjects]);
+    },
+    [loadProjects],
+  );
 
   useEffect(() => {
     loadProjects();

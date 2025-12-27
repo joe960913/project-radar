@@ -17,8 +17,8 @@ export interface Project {
   // Feature: Groups
   group?: string;
   // Feature: Terminal Support
-  openMode?: OpenMode;      // Default: "ide" for backwards compatibility
-  terminal?: AppInfo;       // Terminal app (optional)
+  openMode?: OpenMode; // Default: "ide" for backwards compatibility
+  terminal?: AppInfo; // Terminal app (optional)
 }
 
 // ============================================

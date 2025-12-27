@@ -1,6 +1,6 @@
 import { List, ActionPanel, Action, Icon, Keyboard } from "@raycast/api";
 import { useState } from "react";
-import { useProjects, SORT_OPTIONS, SortOption } from "./hooks/useProjects";
+import { useProjects, SORT_OPTIONS } from "./hooks/useProjects";
 import { ProjectListItem, EmptyView } from "./components";
 import { ProjectWithStatus } from "./types";
 
@@ -30,11 +30,7 @@ export default function GoCommand() {
       isLoading={isLoading}
       searchBarPlaceholder="Search projects..."
       searchBarAccessory={
-        <List.Dropdown
-          tooltip="Filter by group"
-          value={selectedGroup}
-          onChange={setSelectedGroup}
-        >
+        <List.Dropdown tooltip="Filter by group" value={selectedGroup} onChange={setSelectedGroup}>
           <List.Dropdown.Item title="All Projects" value="all" icon={Icon.List} />
           <List.Dropdown.Item title="Favorites" value="favorites" icon={Icon.Star} />
           {groups.length > 0 && (
@@ -62,7 +58,11 @@ export default function GoCommand() {
                 onDelete={deleteProject}
                 onToggleFavorite={toggleFavorite}
                 sortActions={
-                  <ActionPanel.Submenu title="Sort By" icon={Icon.ArrowsUpDown} shortcut={{ modifiers: ["cmd", "shift"], key: "s" }}>
+                  <ActionPanel.Submenu
+                    title="Sort by"
+                    icon={Icon.ArrowsUpDown}
+                    shortcut={{ modifiers: ["cmd", "shift"], key: "s" }}
+                  >
                     {SORT_OPTIONS.map((option, index) => (
                       <Action
                         key={option.value}
@@ -87,9 +87,7 @@ export default function GoCommand() {
 // Helper Functions
 // ============================================
 
-function groupProjectsByCategory(
-  projects: ProjectWithStatus[]
-): Record<string, ProjectWithStatus[]> {
+function groupProjectsByCategory(projects: ProjectWithStatus[]): Record<string, ProjectWithStatus[]> {
   const result: Record<string, ProjectWithStatus[]> = {};
 
   // First, favorites

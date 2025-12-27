@@ -40,9 +40,7 @@ export async function getProjectByAlias(alias: string): Promise<Project | null> 
 // CRUD Operations
 // ============================================
 
-export async function addProject(
-  project: Omit<Project, "id" | "createdAt" | "updatedAt">
-): Promise<Project> {
+export async function addProject(project: Omit<Project, "id" | "createdAt" | "updatedAt">): Promise<Project> {
   const projects = await getProjects();
 
   const newProject: Project = {
@@ -59,7 +57,7 @@ export async function addProject(
 
 export async function updateProject(
   id: string,
-  updates: Partial<Omit<Project, "id" | "createdAt">>
+  updates: Partial<Omit<Project, "id" | "createdAt">>,
 ): Promise<Project | null> {
   const projects = await getProjects();
   const index = projects.findIndex((p) => p.id === id);
@@ -119,9 +117,7 @@ export async function updateLastOpened(id: string): Promise<void> {
 
 export async function getGroups(): Promise<string[]> {
   const projects = await getProjects();
-  const groups = projects
-    .map((p) => p.group)
-    .filter((g): g is string => !!g);
+  const groups = projects.map((p) => p.group).filter((g): g is string => !!g);
   return [...new Set(groups)].sort();
 }
 
@@ -143,9 +139,7 @@ export async function setProjectGroup(id: string, group: string | undefined): Pr
 
 export async function isAliasExists(alias: string, excludeId?: string): Promise<boolean> {
   const projects = await getProjects();
-  return projects.some(
-    (p) => p.alias.toLowerCase() === alias.toLowerCase() && p.id !== excludeId
-  );
+  return projects.some((p) => p.alias.toLowerCase() === alias.toLowerCase() && p.id !== excludeId);
 }
 
 // ============================================

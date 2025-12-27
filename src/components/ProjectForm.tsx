@@ -1,13 +1,4 @@
-import {
-  ActionPanel,
-  Action,
-  Form,
-  showToast,
-  Toast,
-  useNavigation,
-  launchCommand,
-  LaunchType,
-} from "@raycast/api";
+import { ActionPanel, Action, Form, showToast, Toast, useNavigation, launchCommand, LaunchType } from "@raycast/api";
 import { useState } from "react";
 import { ProjectFormProps, AppInfo, OpenMode } from "../types";
 import { addProject, updateProject, isAliasExists } from "../lib/storage";
@@ -52,9 +43,7 @@ export default function ProjectForm({ project, groups = [], onSave }: ProjectFor
 
   // Check if we need to show multi-workspace warning
   const showMultiWorkspaceWarning =
-    selectedPaths.length > 1 &&
-    selectedAppBundleId &&
-    !supportsMultiWorkspace(selectedAppBundleId);
+    selectedPaths.length > 1 && selectedAppBundleId && !supportsMultiWorkspace(selectedAppBundleId);
 
   const selectedAppName = applications.find((app) => app.bundleId === selectedAppBundleId)?.name;
 
@@ -132,7 +121,11 @@ export default function ProjectForm({ project, groups = [], onSave }: ProjectFor
       // Build app info (use first app as fallback for terminal-only mode)
       const appInfo: AppInfo = selectedApp
         ? { name: selectedApp.name, bundleId: selectedApp.bundleId, path: selectedApp.path }
-        : { name: applications[0]?.name || "Unknown", bundleId: applications[0]?.bundleId || "", path: applications[0]?.path || "" };
+        : {
+            name: applications[0]?.name || "Unknown",
+            bundleId: applications[0]?.bundleId || "",
+            path: applications[0]?.path || "",
+          };
 
       // Build terminal info
       const terminalInfo: AppInfo | undefined = selectedTerminal
@@ -140,9 +133,7 @@ export default function ProjectForm({ project, groups = [], onSave }: ProjectFor
         : undefined;
 
       // Determine the final group value
-      const finalGroup = values.group === "__new__"
-        ? (customGroup.trim() || undefined)
-        : (values.group || undefined);
+      const finalGroup = values.group === "__new__" ? customGroup.trim() || undefined : values.group || undefined;
 
       if (isEditing && project) {
         await updateProject(project.id, {
@@ -213,11 +204,7 @@ export default function ProjectForm({ project, groups = [], onSave }: ProjectFor
       navigationTitle={isEditing ? "Edit Project" : "New Project"}
       actions={
         <ActionPanel>
-          <Action.SubmitForm
-            title={isEditing ? "Save" : "Create"}
-            icon={Icons.Check}
-            onSubmit={handleSubmit}
-          />
+          <Action.SubmitForm title={isEditing ? "Save" : "Create"} icon={Icons.Check} onSubmit={handleSubmit} />
         </ActionPanel>
       }
     >

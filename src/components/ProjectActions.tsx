@@ -57,15 +57,11 @@ export default function ProjectActions({
     <ActionPanel>
       {/* Primary Action */}
       <ActionPanel.Section>
-        <Action
-          icon={Icons.ArrowSquareOut}
-          title={`Open in ${project.app.name}`}
-          onAction={handleOpen}
-        />
+        <Action icon={Icons.ArrowSquareOut} title={`Open in ${project.app.name}`} onAction={handleOpen} />
         <Action
           icon={isFavorite ? Icons.Star : Icons.StarFilled}
           title={isFavorite ? "Remove from Favorites" : "Add to Favorites"}
-          shortcut={SHORTCUTS.TOGGLE_FAVORITE as any}
+          shortcut={SHORTCUTS.TOGGLE_FAVORITE}
           onAction={handleToggleFavorite}
         />
       </ActionPanel.Section>
@@ -75,31 +71,24 @@ export default function ProjectActions({
         <Action.Push
           icon={Icons.Pencil}
           title="Edit"
-          shortcut={SHORTCUTS.EDIT_PROJECT as any}
+          shortcut={SHORTCUTS.EDIT_PROJECT}
           target={<ProjectForm project={project} groups={groups} onSave={onRefresh} />}
         />
         <Action.Push
           icon={Icons.Plus}
           title="Add New"
-          shortcut={SHORTCUTS.ADD_PROJECT as any}
+          shortcut={SHORTCUTS.ADD_PROJECT}
           target={<ProjectForm groups={groups} onSave={onRefresh} />}
         />
       </ActionPanel.Section>
 
       {/* File & Path */}
       <ActionPanel.Section title="Path">
-        <Action.ShowInFinder
-          path={project.paths[0]}
-          shortcut={SHORTCUTS.SHOW_IN_FINDER as any}
-        />
-        <Action.CopyToClipboard
-          title="Copy Path"
-          content={project.paths.join("\n")}
-          shortcut={SHORTCUTS.COPY_PATH as any}
-        />
+        <Action.ShowInFinder path={project.paths[0]} shortcut={SHORTCUTS.SHOW_IN_FINDER} />
+        <Action.CopyToClipboard title="Copy Path" content={project.paths.join("\n")} shortcut={SHORTCUTS.COPY_PATH} />
         <Action.CreateQuicklink
           title="Create Quicklink"
-          shortcut={SHORTCUTS.CREATE_QUICKLINK as any}
+          shortcut={SHORTCUTS.CREATE_QUICKLINK}
           quicklink={{
             name: project.alias,
             link: createProjectDeeplink(project.id),
@@ -116,7 +105,7 @@ export default function ProjectActions({
           icon={Icons.Trash}
           title="Delete"
           style={Action.Style.Destructive}
-          shortcut={SHORTCUTS.DELETE_PROJECT as any}
+          shortcut={SHORTCUTS.DELETE_PROJECT}
           onAction={handleDelete}
         />
       </ActionPanel.Section>
