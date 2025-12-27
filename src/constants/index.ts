@@ -71,3 +71,23 @@ export function supportsMultiWorkspace(bundleId: string): boolean {
   // Default to false (safer assumption)
   return MULTI_WORKSPACE_IDES[bundleId] ?? false;
 }
+
+// ============================================
+// Terminal Applications
+// ============================================
+
+// Known terminal application bundle IDs
+export const TERMINAL_APPS: readonly string[] = [
+  "com.apple.Terminal",           // Terminal.app
+  "com.googlecode.iterm2",        // iTerm2
+  "dev.warp.Warp-Stable",         // Warp
+  "com.github.wez.wezterm",       // WezTerm
+  "net.kovidgoyal.kitty",         // Kitty
+  "co.zeit.hyper",                // Hyper
+  "com.microsoft.VSCode",         // VS Code (has integrated terminal)
+] as const;
+
+// Check if an app is a terminal
+export function isTerminalApp(bundleId: string): boolean {
+  return TERMINAL_APPS.includes(bundleId);
+}

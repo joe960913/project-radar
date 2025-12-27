@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getApplications } from "@raycast/api";
+import { getApplications, Application } from "@raycast/api";
 import { AppInfo } from "../types";
 
 // ============================================
@@ -95,4 +95,78 @@ export function useApplications(): UseApplicationsReturn {
   }, []);
 
   return { applications, isLoading };
+}
+
+// ============================================
+// Supported Terminals (whitelist)
+// ============================================
+
+const SUPPORTED_TERMINALS: { bundleId: string; name: string }[] = [
+  // macOS built-in
+  { bundleId: "com.apple.Terminal", name: "Terminal" },
+
+  // Popular terminals
+  { bundleId: "com.googlecode.iterm2", name: "iTerm" },
+  { bundleId: "dev.warp.Warp-Stable", name: "Warp" },
+  { bundleId: "com.github.wez.wezterm", name: "WezTerm" },
+  { bundleId: "net.kovidgoyal.kitty", name: "Kitty" },
+  { bundleId: "co.zeit.hyper", name: "Hyper" },
+  { bundleId: "com.mitchellh.ghostty", name: "Ghostty" },
+
+  // Other
+  { bundleId: "io.alacritty", name: "Alacritty" },
+  { bundleId: "com.panic.Prompt3", name: "Prompt" },
+];
+
+// ============================================
+// useTerminals Hook
+// ============================================
+
+interface UseTerminalsReturn {
+  terminals: AppInfo[];
+  isLoading: boolean;
+}
+
+export function useTerminals(): UseTerminalsReturn {
+  const [terminals, setTerminals] = useState<AppInfo[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadTerminals() {
+      setIsLoading(true);
+      try {
+        const installedApps = await getApplications();
+        const installedBundleIds = new Set(
+          installedApps.map((app) => app.bundleId).filter(Boolean)
+        );
+
+        // Filter: only show supported terminals that are installed
+        const availableTerminals = SUPPORTED_TERMINALS.filter((terminal) =>
+          installedBundleIds.has(terminal.bundleId)
+        );
+
+        // Get full app info (path)
+        const appInfos: AppInfo[] = availableTerminals.map((terminal) => {
+          const installedApp = installedApps.find(
+            (app) => app.bundleId === terminal.bundleId
+          );
+          return {
+            name: terminal.name,
+            bundleId: terminal.bundleId,
+            path: installedApp?.path || "",
+          };
+        });
+
+        setTerminals(appInfos);
+      } catch (error) {
+        console.error("Failed to load terminals:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadTerminals();
+  }, []);
+
+  return { terminals, isLoading };
 }

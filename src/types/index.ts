@@ -2,6 +2,8 @@
 // Project Types
 // ============================================
 
+export type OpenMode = "ide" | "terminal" | "both";
+
 export interface Project {
   id: string;
   alias: string;
@@ -14,6 +16,9 @@ export interface Project {
   lastOpenedAt?: number;
   // Feature: Groups
   group?: string;
+  // Feature: Terminal Support
+  openMode?: OpenMode;      // Default: "ide" for backwards compatibility
+  terminal?: AppInfo;       // Terminal app (optional)
 }
 
 // ============================================

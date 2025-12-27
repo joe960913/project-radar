@@ -1,16 +1,27 @@
 import { showToast, Toast, showHUD, open } from "@raycast/api";
-import { Project } from "../types";
+import { Project, OpenMode } from "../types";
 import { updateLastOpened } from "./storage";
 
 // ============================================
-// IDE/App Operations
+// Project Open Operations
 // ============================================
 
 export async function openProjectInApp(project: Project): Promise<boolean> {
+  const openMode: OpenMode = project.openMode ?? "ide";
+
   try {
-    // Open all paths with the specified application
-    for (const path of project.paths) {
-      await open(path, project.app.bundleId);
+    // Open in IDE
+    if (openMode === "ide" || openMode === "both") {
+      for (const path of project.paths) {
+        await open(path, project.app.bundleId);
+      }
+    }
+
+    // Open in Terminal
+    if ((openMode === "terminal" || openMode === "both") && project.terminal) {
+      for (const path of project.paths) {
+        await open(path, project.terminal.bundleId);
+      }
     }
 
     // Record last opened time
@@ -31,7 +42,20 @@ export async function openProjectWithHUD(project: Project): Promise<void> {
   const success = await openProjectInApp(project);
 
   if (success) {
-    await showHUD(`Opening ${project.alias} in ${project.app.name}`);
+    const openMode: OpenMode = project.openMode ?? "ide";
+    let message = "";
+
+    if (openMode === "ide") {
+      message = `Opening ${project.alias} in ${project.app.name}`;
+    } else if (openMode === "terminal" && project.terminal) {
+      message = `Opening ${project.alias} in ${project.terminal.name}`;
+    } else if (openMode === "both" && project.terminal) {
+      message = `Opening ${project.alias} in ${project.app.name} + ${project.terminal.name}`;
+    } else {
+      message = `Opening ${project.alias}`;
+    }
+
+    await showHUD(message);
   }
 }
 
@@ -39,9 +63,22 @@ export async function openProjectWithToast(project: Project): Promise<void> {
   const success = await openProjectInApp(project);
 
   if (success) {
+    const openMode: OpenMode = project.openMode ?? "ide";
+    let title = "";
+
+    if (openMode === "ide") {
+      title = `Opening in ${project.app.name}`;
+    } else if (openMode === "terminal" && project.terminal) {
+      title = `Opening in ${project.terminal.name}`;
+    } else if (openMode === "both" && project.terminal) {
+      title = `Opening in ${project.app.name} + ${project.terminal.name}`;
+    } else {
+      title = "Opening project";
+    }
+
     await showToast({
       style: Toast.Style.Success,
-      title: `Opening in ${project.app.name}`,
+      title,
       message: project.alias,
     });
   }

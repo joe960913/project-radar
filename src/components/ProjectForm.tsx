@@ -9,9 +9,9 @@ import {
   LaunchType,
 } from "@raycast/api";
 import { useState } from "react";
-import { ProjectFormProps, AppInfo } from "../types";
+import { ProjectFormProps, AppInfo, OpenMode } from "../types";
 import { addProject, updateProject, isAliasExists } from "../lib/storage";
-import { useApplications } from "../hooks/useApplications";
+import { useApplications, useTerminals } from "../hooks/useApplications";
 import { createProjectDeeplink } from "../utils/deeplink";
 import { DEFAULT_GROUPS, supportsMultiWorkspace, Icons } from "../constants";
 
@@ -23,6 +23,8 @@ interface FormValues {
   alias: string;
   paths: string[];
   appBundleId: string;
+  openMode: OpenMode;
+  terminalBundleId: string;
   group: string;
   createQuicklink: boolean;
 }
@@ -35,15 +37,18 @@ export default function ProjectForm({ project, groups = [], onSave }: ProjectFor
   const { pop } = useNavigation();
   const [aliasError, setAliasError] = useState<string | undefined>();
   const { applications, isLoading: appsLoading } = useApplications();
+  const { terminals, isLoading: terminalsLoading } = useTerminals();
 
   // Track selected paths and app for multi-workspace warning
   const [selectedPaths, setSelectedPaths] = useState<string[]>(project?.paths || []);
   const [selectedAppBundleId, setSelectedAppBundleId] = useState<string | undefined>(project?.app?.bundleId);
+  const [selectedOpenMode, setSelectedOpenMode] = useState<OpenMode>(project?.openMode || "ide");
   const [selectedGroup, setSelectedGroup] = useState<string>(project?.group || "");
   const [customGroup, setCustomGroup] = useState<string>("");
 
   const isEditing = !!project;
   const isCreatingNewGroup = selectedGroup === "__new__";
+  const showTerminalSelector = selectedOpenMode === "terminal" || selectedOpenMode === "both";
 
   // Check if we need to show multi-workspace warning
   const showMultiWorkspaceWarning =
@@ -80,33 +85,59 @@ export default function ProjectForm({ project, groups = [], onSave }: ProjectFor
       return;
     }
 
-    // Validate app selection
-    if (!values.appBundleId) {
+    // Validate app selection (only if mode includes IDE)
+    const openMode = values.openMode || "ide";
+    if ((openMode === "ide" || openMode === "both") && !values.appBundleId) {
       await showToast({
         style: Toast.Style.Failure,
         title: "Validation Error",
-        message: "Please select an application",
+        message: "Please select an IDE",
+      });
+      return;
+    }
+
+    // Validate terminal selection (only if mode includes terminal)
+    if ((openMode === "terminal" || openMode === "both") && !values.terminalBundleId) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Validation Error",
+        message: "Please select a terminal",
       });
       return;
     }
 
     // Find the selected app
     const selectedApp = applications.find((app) => app.bundleId === values.appBundleId);
-    if (!selectedApp) {
+    if ((openMode === "ide" || openMode === "both") && !selectedApp) {
       await showToast({
         style: Toast.Style.Failure,
         title: "Validation Error",
-        message: "Selected application not found",
+        message: "Selected IDE not found",
+      });
+      return;
+    }
+
+    // Find the selected terminal
+    const selectedTerminal = terminals.find((t) => t.bundleId === values.terminalBundleId);
+    if ((openMode === "terminal" || openMode === "both") && !selectedTerminal) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Validation Error",
+        message: "Selected terminal not found",
       });
       return;
     }
 
     try {
-      const appInfo: AppInfo = {
-        name: selectedApp.name,
-        bundleId: selectedApp.bundleId,
-        path: selectedApp.path,
-      };
+      // Build app info (use first app as fallback for terminal-only mode)
+      const appInfo: AppInfo = selectedApp
+        ? { name: selectedApp.name, bundleId: selectedApp.bundleId, path: selectedApp.path }
+        : { name: applications[0]?.name || "Unknown", bundleId: applications[0]?.bundleId || "", path: applications[0]?.path || "" };
+
+      // Build terminal info
+      const terminalInfo: AppInfo | undefined = selectedTerminal
+        ? { name: selectedTerminal.name, bundleId: selectedTerminal.bundleId, path: selectedTerminal.path }
+        : undefined;
 
       // Determine the final group value
       const finalGroup = values.group === "__new__"
@@ -118,6 +149,8 @@ export default function ProjectForm({ project, groups = [], onSave }: ProjectFor
           alias: values.alias.trim(),
           paths: values.paths,
           app: appInfo,
+          openMode,
+          terminal: terminalInfo,
           group: finalGroup,
         });
         await showToast({
@@ -132,6 +165,8 @@ export default function ProjectForm({ project, groups = [], onSave }: ProjectFor
           alias: values.alias.trim(),
           paths: values.paths,
           app: appInfo,
+          openMode,
+          terminal: terminalInfo,
           group: finalGroup,
         });
         await showToast({
@@ -174,7 +209,7 @@ export default function ProjectForm({ project, groups = [], onSave }: ProjectFor
 
   return (
     <Form
-      isLoading={appsLoading}
+      isLoading={appsLoading || terminalsLoading}
       navigationTitle={isEditing ? "Edit Project" : "New Project"}
       actions={
         <ActionPanel>
@@ -209,26 +244,57 @@ export default function ProjectForm({ project, groups = [], onSave }: ProjectFor
       />
 
       <Form.Dropdown
-        id="appBundleId"
-        title="Open With"
-        defaultValue={appsLoading ? undefined : project?.app?.bundleId}
-        onChange={setSelectedAppBundleId}
+        id="openMode"
+        title="Open Mode"
+        info="How to open this project"
+        defaultValue={project?.openMode || "ide"}
+        onChange={(value) => setSelectedOpenMode(value as OpenMode)}
       >
-        {applications.map((app) => (
-          <Form.Dropdown.Item
-            key={app.bundleId}
-            value={app.bundleId}
-            title={app.name}
-            icon={{ fileIcon: app.path }}
-          />
-        ))}
+        <Form.Dropdown.Item value="ide" title="IDE Only" icon={Icons.ArrowSquareOut} />
+        <Form.Dropdown.Item value="terminal" title="Terminal Only" icon={Icons.ArrowSquareOut} />
+        <Form.Dropdown.Item value="both" title="IDE + Terminal" icon={Icons.ArrowSquareOut} />
       </Form.Dropdown>
+
+      {(selectedOpenMode === "ide" || selectedOpenMode === "both") && (
+        <Form.Dropdown
+          id="appBundleId"
+          title="IDE"
+          defaultValue={appsLoading ? undefined : project?.app?.bundleId}
+          onChange={setSelectedAppBundleId}
+        >
+          {applications.map((app) => (
+            <Form.Dropdown.Item
+              key={app.bundleId}
+              value={app.bundleId}
+              title={app.name}
+              icon={{ fileIcon: app.path }}
+            />
+          ))}
+        </Form.Dropdown>
+      )}
 
       {showMultiWorkspaceWarning && (
         <Form.Description
           title="Note"
           text={`${selectedAppName || "This IDE"} does not support multi-folder workspaces. Each path will open in a separate window.`}
         />
+      )}
+
+      {showTerminalSelector && (
+        <Form.Dropdown
+          id="terminalBundleId"
+          title="Terminal"
+          defaultValue={terminalsLoading ? undefined : project?.terminal?.bundleId}
+        >
+          {terminals.map((terminal) => (
+            <Form.Dropdown.Item
+              key={terminal.bundleId}
+              value={terminal.bundleId}
+              title={terminal.name}
+              icon={{ fileIcon: terminal.path }}
+            />
+          ))}
+        </Form.Dropdown>
       )}
 
       <Form.Dropdown
