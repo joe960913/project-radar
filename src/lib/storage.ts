@@ -26,6 +26,16 @@ export async function getProjectById(id: string): Promise<Project | null> {
   return projects.find((p) => p.id === id) || null;
 }
 
+export async function getProjectByAlias(alias: string): Promise<Project | null> {
+  const projects = await getProjects();
+  const lowerAlias = alias.toLowerCase().trim();
+  // Exact match first
+  const exact = projects.find((p) => p.alias.toLowerCase() === lowerAlias);
+  if (exact) return exact;
+  // Partial match (starts with)
+  return projects.find((p) => p.alias.toLowerCase().startsWith(lowerAlias)) || null;
+}
+
 // ============================================
 // CRUD Operations
 // ============================================

@@ -16,13 +16,6 @@
   "license": "MIT",
   "commands": [
     {
-      "name": "search-projects",
-      "title": "Search Projects",
-      "subtitle": "Repo Radar",
-      "description": "Search and open project aliases with your preferred IDE",
-      "mode": "view"
-    },
-    {
       "name": "manage-projects",
       "title": "Manage Projects",
       "subtitle": "Repo Radar",
@@ -31,10 +24,11 @@
     },
     {
       "name": "open-project",
-      "title": "Open Project",
+      "title": "Go",
       "subtitle": "Repo Radar",
-      "description": "Open a project by ID (used by quicklinks)",
-      "mode": "no-view"
+      "description": "Quickly open a project by alias",
+      "mode": "view",
+      "keywords": ["open", "project", "go", "o", "jump", "cd"]
     },
     {
       "name": "clear-data",
