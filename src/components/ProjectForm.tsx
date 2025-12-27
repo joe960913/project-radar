@@ -48,7 +48,7 @@ export default function ProjectForm({ project, groups = [], onSave }: ProjectFor
   const selectedAppName = applications.find((app) => app.bundleId === selectedAppBundleId)?.name;
 
   // Combine existing groups with default groups
-  const allGroups = [...new Set([...groups, ...DEFAULT_GROUPS])];
+  const allGroups = Array.from(new Set([...groups, ...DEFAULT_GROUPS]));
 
   async function handleSubmit(values: FormValues) {
     // Validate alias
@@ -317,7 +317,7 @@ export default function ProjectForm({ project, groups = [], onSave }: ProjectFor
             id="createQuicklink"
             label="Create Quicklink"
             info="Access this project from Raycast root search"
-            defaultValue={true}
+            defaultValue={false}
           />
         </>
       )}

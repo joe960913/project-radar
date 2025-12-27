@@ -47,10 +47,6 @@ export interface GitStatus {
 // Component Props Types
 // ============================================
 
-export interface ProjectWithStatus extends Project {
-  gitStatus: GitStatus | null;
-}
-
 export interface ProjectFormProps {
   project?: Project;
   groups?: string[];

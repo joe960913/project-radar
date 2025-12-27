@@ -1,6 +1,6 @@
 import { List } from "@raycast/api";
 import { ReactNode } from "react";
-import { Project, ProjectWithStatus } from "../types";
+import { Project } from "../types";
 import ProjectActions from "./ProjectActions";
 
 // ============================================
@@ -8,7 +8,7 @@ import ProjectActions from "./ProjectActions";
 // ============================================
 
 interface ProjectListItemProps {
-  project: ProjectWithStatus;
+  project: Project;
   groups: string[];
   onRefresh: () => void;
   onDelete: (project: Project) => Promise<boolean>;
@@ -27,10 +27,13 @@ export default function ProjectListItem({
   const subtitle = formatSubtitle(project);
   const keywords = [project.alias, project.app.name, project.group, ...project.paths].filter(Boolean) as string[];
 
+  // Use terminal icon when openMode is "terminal", otherwise use IDE icon
+  const iconPath = project.openMode === "terminal" && project.terminal?.path ? project.terminal.path : project.app.path;
+
   return (
     <List.Item
       key={project.id}
-      icon={{ fileIcon: project.app.path }}
+      icon={{ fileIcon: iconPath }}
       title={project.alias}
       subtitle={subtitle}
       keywords={keywords}
@@ -53,12 +56,12 @@ export default function ProjectListItem({
 // Helper Functions
 // ============================================
 
-function formatSubtitle(project: ProjectWithStatus): string {
+function formatSubtitle(project: Project): string {
   const pathName = project.paths[0].split("/").pop() || project.paths[0];
   return pathName;
 }
 
-function getAccessories(project: ProjectWithStatus): List.Item.Accessory[] {
+function getAccessories(project: Project): List.Item.Accessory[] {
   const accessories: List.Item.Accessory[] = [];
 
   // Favorite indicator (text only, minimal)
@@ -74,41 +77,6 @@ function getAccessories(project: ProjectWithStatus): List.Item.Accessory[] {
     accessories.push({
       tag: project.group,
       tooltip: `Group: ${project.group}`,
-    });
-  }
-
-  // Git status (if git repo) - text only for consistency
-  if (project.gitStatus?.isGitRepo && project.gitStatus.branch) {
-    const { branch, ahead, behind, hasChanges } = project.gitStatus;
-
-    // Build branch display
-    const parts: string[] = [branch];
-
-    if (ahead && ahead > 0) {
-      parts.push(`↑${ahead}`);
-    }
-    if (behind && behind > 0) {
-      parts.push(`↓${behind}`);
-    }
-    if (hasChanges) {
-      parts.push("●");
-    }
-
-    // Build tooltip
-    const tooltipParts = [`Branch: ${branch}`];
-    if (ahead && ahead > 0) {
-      tooltipParts.push(`${ahead} ahead`);
-    }
-    if (behind && behind > 0) {
-      tooltipParts.push(`${behind} behind`);
-    }
-    if (hasChanges) {
-      tooltipParts.push("Uncommitted changes");
-    }
-
-    accessories.push({
-      text: parts.join(" "),
-      tooltip: tooltipParts.join(" | "),
     });
   }
 

@@ -24,6 +24,7 @@ export const SHORTCUTS: Record<string, Keyboard.Shortcut> = {
   CREATE_QUICKLINK: { modifiers: ["cmd", "shift"], key: "q" },
   TOGGLE_FAVORITE: { modifiers: ["cmd"], key: "s" },
   SET_GROUP: { modifiers: ["cmd"], key: "g" },
+  GIT_STATUS: { modifiers: ["cmd", "shift"], key: "g" },
 };
 
 // ============================================
