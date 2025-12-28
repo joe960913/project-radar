@@ -9,6 +9,7 @@
 </p>
 
 <p align="center">
+  <a href="https://x.com/zanderzi0913"><img src="https://img.shields.io/badge/@zanderzi0913-f4f4f4?style=flat&logo=x&logoColor=555" alt="X"></a>
   <img src="https://img.shields.io/badge/raycast-f4f4f4?style=flat&logo=raycast&logoColor=555" alt="raycast">
   <img src="https://img.shields.io/badge/macOS-f4f4f4?style=flat&logoColor=555" alt="macos">
   <img src="https://img.shields.io/badge/windows-f4f4f4?style=flat&logoColor=555" alt="windows">
