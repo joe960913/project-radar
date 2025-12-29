@@ -20,6 +20,7 @@ export interface Project {
   // Feature: Terminal Support
   openMode?: OpenMode; // Default: "ide" for backwards compatibility
   terminal?: AppInfo; // Terminal app (optional)
+  terminalCommand?: string; // Command to run in terminal (e.g., "claude", "codex")
 }
 
 // ============================================

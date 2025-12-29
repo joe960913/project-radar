@@ -1,6 +1,8 @@
-import { showToast, Toast, showHUD, open } from "@raycast/api";
+import { showToast, Toast, showHUD, open, closeMainWindow } from "@raycast/api";
+import { showFailureToast } from "@raycast/utils";
 import { Project, OpenMode } from "../types";
 import { updateLastOpened } from "./storage";
+import { createTerminalExecutor } from "./terminal";
 
 // ============================================
 // Project Open Operations
@@ -10,6 +12,11 @@ export async function openProjectInApp(project: Project): Promise<boolean> {
   const openMode: OpenMode = project.openMode ?? "ide";
 
   try {
+    // Close Raycast window first if opening terminal (needed for Warp UI scripting)
+    if (openMode === "terminal" || openMode === "both") {
+      await closeMainWindow();
+    }
+
     // Open in IDE
     if (openMode === "ide" || openMode === "both") {
       for (const path of project.paths) {
@@ -19,8 +26,13 @@ export async function openProjectInApp(project: Project): Promise<boolean> {
 
     // Open in Terminal
     if ((openMode === "terminal" || openMode === "both") && project.terminal) {
+      const executor = createTerminalExecutor(project.terminal.bundleId);
       for (const path of project.paths) {
-        await open(path, project.terminal.bundleId);
+        await executor.execute({
+          path,
+          bundleId: project.terminal.bundleId,
+          command: project.terminalCommand,
+        });
       }
     }
 
@@ -29,11 +41,7 @@ export async function openProjectInApp(project: Project): Promise<boolean> {
 
     return true;
   } catch (error) {
-    await showToast({
-      style: Toast.Style.Failure,
-      title: "Failed to open project",
-      message: String(error),
-    });
+    await showFailureToast(error, { title: "Failed to open project" });
     return false;
   }
 }
@@ -42,19 +50,7 @@ export async function openProjectWithHUD(project: Project): Promise<void> {
   const success = await openProjectInApp(project);
 
   if (success) {
-    const openMode: OpenMode = project.openMode ?? "ide";
-    let message = "";
-
-    if (openMode === "ide") {
-      message = `Opening ${project.alias} in ${project.app.name}`;
-    } else if (openMode === "terminal" && project.terminal) {
-      message = `Opening ${project.alias} in ${project.terminal.name}`;
-    } else if (openMode === "both" && project.terminal) {
-      message = `Opening ${project.alias} in ${project.app.name} + ${project.terminal.name}`;
-    } else {
-      message = `Opening ${project.alias}`;
-    }
-
+    const message = buildOpenMessage(project);
     await showHUD(message);
   }
 }
@@ -63,23 +59,53 @@ export async function openProjectWithToast(project: Project): Promise<void> {
   const success = await openProjectInApp(project);
 
   if (success) {
-    const openMode: OpenMode = project.openMode ?? "ide";
-    let title = "";
-
-    if (openMode === "ide") {
-      title = `Opening in ${project.app.name}`;
-    } else if (openMode === "terminal" && project.terminal) {
-      title = `Opening in ${project.terminal.name}`;
-    } else if (openMode === "both" && project.terminal) {
-      title = `Opening in ${project.app.name} + ${project.terminal.name}`;
-    } else {
-      title = "Opening project";
-    }
-
+    const title = buildOpenMessage(project);
     await showToast({
       style: Toast.Style.Success,
       title,
       message: project.alias,
     });
   }
+}
+
+// ============================================
+// Helper Functions
+// ============================================
+
+/**
+ * Build a descriptive target string for opening a project
+ * Examples:
+ * - "VS Code"
+ * - "Warp"
+ * - "Warp → claude"
+ * - "VS Code + Warp"
+ * - "VS Code + Warp → claude"
+ */
+export function buildOpenTarget(project: Project): string {
+  const openMode: OpenMode = project.openMode ?? "ide";
+  const parts: string[] = [];
+
+  // IDE part
+  if (openMode === "ide" || openMode === "both") {
+    parts.push(project.app.name);
+  }
+
+  // Terminal part
+  if ((openMode === "terminal" || openMode === "both") && project.terminal) {
+    let terminalPart = project.terminal.name;
+    if (project.terminalCommand) {
+      terminalPart += ` → ${project.terminalCommand}`;
+    }
+    parts.push(terminalPart);
+  }
+
+  return parts.length > 0 ? parts.join(" + ") : project.app.name;
+}
+
+/**
+ * Build a descriptive message for opening a project (with "Opening in" prefix)
+ */
+function buildOpenMessage(project: Project): string {
+  const target = buildOpenTarget(project);
+  return `Opening in ${target}`;
 }

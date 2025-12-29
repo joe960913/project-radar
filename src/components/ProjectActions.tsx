@@ -2,7 +2,7 @@ import { ActionPanel, Action, confirmAlert, Alert, showToast, Toast } from "@ray
 import { ReactNode } from "react";
 import { Project } from "../types";
 import { SHORTCUTS, Icons } from "../constants";
-import { openProjectWithToast } from "../lib/ide";
+import { openProjectWithToast, buildOpenTarget } from "../lib/ide";
 import { createProjectDeeplink } from "../utils/deeplink";
 import { getCombinedGitStatus } from "../lib/git";
 import ProjectForm from "./ProjectForm";
@@ -85,7 +85,7 @@ export default function ProjectActions({
     <ActionPanel>
       {/* Primary Action */}
       <ActionPanel.Section>
-        <Action icon={Icons.ArrowSquareOut} title={`Open in ${project.app.name}`} onAction={handleOpen} />
+        <Action icon={Icons.ArrowSquareOut} title={`Open in ${buildOpenTarget(project)}`} onAction={handleOpen} />
         <Action
           icon={Icons.Star}
           title={isFavorite ? "Remove from Favorites" : "Add to Favorites"}

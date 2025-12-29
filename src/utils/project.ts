@@ -1,6 +1,6 @@
 import { List } from "@raycast/api";
 import { Project } from "../types";
-import { getIconForGroup } from "../constants";
+import { getIconForGroup, getCommandIcon } from "../constants";
 
 // ============================================
 // Project Display Utilities
@@ -37,6 +37,15 @@ export function formatSubtitle(project: Project): string {
  */
 export function getAccessories(project: Project): List.Item.Accessory[] {
   const accessories: List.Item.Accessory[] = [];
+
+  // Command icon (if terminal command is set)
+  const commandIcon = getCommandIcon(project.terminalCommand);
+  if (commandIcon) {
+    accessories.push({
+      icon: commandIcon,
+      tooltip: `Run: ${project.terminalCommand}`,
+    });
+  }
 
   // Favorite indicator (text only, minimal)
   if (project.isFavorite) {

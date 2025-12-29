@@ -1,10 +1,21 @@
-import { ActionPanel, Action, Form, showToast, Toast, useNavigation, launchCommand, LaunchType } from "@raycast/api";
+import {
+  ActionPanel,
+  Action,
+  Form,
+  showToast,
+  Toast,
+  useNavigation,
+  launchCommand,
+  LaunchType,
+  Icon,
+} from "@raycast/api";
 import { useState } from "react";
 import { ProjectFormProps, AppInfo, OpenMode } from "../types";
 import { addProject, updateProject, isAliasExists } from "../lib/storage";
 import { useApplications, useTerminals } from "../hooks/useApplications";
+import { useAITools } from "../hooks/useAITools";
 import { createProjectDeeplink } from "../utils/deeplink";
-import { DEFAULT_GROUPS, GROUP_ICON_OPTIONS, getIconForGroup, supportsMultiWorkspace, Icons } from "../constants";
+import { DEFAULT_GROUPS, GROUP_ICON_OPTIONS, getIconForGroup, supportsMultiWorkspace, Icons, KNOWN_AI_COMMANDS } from "../constants";
 
 // ============================================
 // Form Values Interface
@@ -16,6 +27,7 @@ interface FormValues {
   appBundleId: string;
   openMode: OpenMode;
   terminalBundleId: string;
+  terminalCommand: string;
   group: string;
   groupIcon: string;
   createQuicklink: boolean;
@@ -28,8 +40,19 @@ interface FormValues {
 export default function ProjectForm({ project, groups = [], onSave }: ProjectFormProps) {
   const { pop } = useNavigation();
   const [aliasError, setAliasError] = useState<string | undefined>();
-  const { applications, isLoading: appsLoading } = useApplications();
-  const { terminals, isLoading: terminalsLoading } = useTerminals();
+  const { applications, isLoading: appsLoading, refresh: refreshApps } = useApplications();
+  const { terminals, isLoading: terminalsLoading, refresh: refreshTerminals } = useTerminals();
+  const { tools: aiTools, allToolDefinitions, isLoading: aiToolsLoading, refresh: refreshAITools } = useAITools();
+
+  // Refresh all caches
+  const refreshAll = () => {
+    refreshApps();
+    refreshTerminals();
+    refreshAITools();
+  };
+
+  // Use tool definitions as fallback when aiTools is still loading
+  const toolsForDropdown = aiTools.length > 0 ? aiTools : allToolDefinitions.map((t) => ({ ...t, installed: false }));
 
   // Track selected paths and app for multi-workspace warning
   const [selectedPaths, setSelectedPaths] = useState<string[]>(project?.paths || []);
@@ -38,6 +61,16 @@ export default function ProjectForm({ project, groups = [], onSave }: ProjectFor
   const [selectedGroup, setSelectedGroup] = useState<string>(project?.group || "");
   const [customGroup, setCustomGroup] = useState<string>("");
   const [customGroupIcon, setCustomGroupIcon] = useState<string>(project?.groupIcon || "Folder");
+
+  // AI tool / custom command selection
+  // If saved command is a known AI tool, use it; otherwise treat as custom
+  const savedCommand = project?.terminalCommand;
+  const isKnownAITool = savedCommand && KNOWN_AI_COMMANDS.includes(savedCommand);
+  const [selectedAITool, setSelectedAITool] = useState<string>(
+    isKnownAITool ? savedCommand : savedCommand ? "__custom__" : "",
+  );
+  const [customCommand, setCustomCommand] = useState<string>(isKnownAITool ? "" : savedCommand || "");
+  const isCustomCommand = selectedAITool === "__custom__";
 
   const isEditing = !!project;
   const isCreatingNewGroup = selectedGroup === "__new__";
@@ -148,6 +181,7 @@ export default function ProjectForm({ project, groups = [], onSave }: ProjectFor
           app: appInfo,
           openMode,
           terminal: terminalInfo,
+          terminalCommand: getFinalTerminalCommand(),
           group: finalGroup,
           groupIcon: finalGroupIcon,
         });
@@ -165,6 +199,7 @@ export default function ProjectForm({ project, groups = [], onSave }: ProjectFor
           app: appInfo,
           openMode,
           terminal: terminalInfo,
+          terminalCommand: getFinalTerminalCommand(),
           group: finalGroup,
           groupIcon: finalGroupIcon,
         });
@@ -206,13 +241,27 @@ export default function ProjectForm({ project, groups = [], onSave }: ProjectFor
     }
   }
 
+  // Get the final terminal command value
+  const getFinalTerminalCommand = (): string | undefined => {
+    if (!showTerminalSelector) return undefined;
+    if (isCustomCommand) return customCommand.trim() || undefined;
+    if (selectedAITool && selectedAITool !== "") return selectedAITool;
+    return undefined;
+  };
+
   return (
     <Form
-      isLoading={appsLoading || terminalsLoading}
+      isLoading={appsLoading || terminalsLoading || aiToolsLoading}
       navigationTitle={isEditing ? "Edit Project" : "New Project"}
       actions={
         <ActionPanel>
           <Action.SubmitForm title={isEditing ? "Save" : "Create"} icon={Icons.Check} onSubmit={handleSubmit} />
+          <Action
+            title="Refresh Apps"
+            icon={Icon.ArrowClockwise}
+            shortcut={{ modifiers: ["cmd"], key: "r" }}
+            onAction={refreshAll}
+          />
         </ActionPanel>
       }
     >
@@ -242,7 +291,7 @@ export default function ProjectForm({ project, groups = [], onSave }: ProjectFor
         id="openMode"
         title="Open Mode"
         info="How to open this project"
-        defaultValue={project?.openMode || "ide"}
+        value={selectedOpenMode}
         onChange={(value) => setSelectedOpenMode(value as OpenMode)}
       >
         <Form.Dropdown.Item value="ide" title="IDE Only" icon={Icons.ArrowSquareOut} />
@@ -276,20 +325,54 @@ export default function ProjectForm({ project, groups = [], onSave }: ProjectFor
       )}
 
       {showTerminalSelector && (
-        <Form.Dropdown
-          id="terminalBundleId"
-          title="Terminal"
-          defaultValue={terminalsLoading ? undefined : project?.terminal?.bundleId}
-        >
-          {terminals.map((terminal) => (
-            <Form.Dropdown.Item
-              key={terminal.bundleId}
-              value={terminal.bundleId}
-              title={terminal.name}
-              icon={{ fileIcon: terminal.path }}
+        <>
+          <Form.Dropdown
+            id="terminalBundleId"
+            title="Terminal"
+            defaultValue={terminalsLoading ? undefined : project?.terminal?.bundleId}
+          >
+            {terminals.map((terminal) => (
+              <Form.Dropdown.Item
+                key={terminal.bundleId}
+                value={terminal.bundleId}
+                title={terminal.name}
+                icon={{ fileIcon: terminal.path }}
+              />
+            ))}
+          </Form.Dropdown>
+
+          <Form.Dropdown
+            id="terminalCommand"
+            title="Run Command"
+            info="Command to run after opening terminal (optional)"
+            value={selectedAITool}
+            onChange={setSelectedAITool}
+          >
+            <Form.Dropdown.Item key="" value="" title="None" icon={Icon.Minus} />
+            {toolsForDropdown.map((tool) => (
+              <Form.Dropdown.Item
+                key={tool.command}
+                value={tool.command}
+                title={tool.installed ? tool.label : `${tool.label} (not installed)`}
+                icon={tool.icon}
+              />
+            ))}
+            <Form.Dropdown.Section title="Custom">
+              <Form.Dropdown.Item key="__custom__" value="__custom__" title="Custom Command..." icon={Icon.Terminal} />
+            </Form.Dropdown.Section>
+          </Form.Dropdown>
+
+          {isCustomCommand && (
+            <Form.TextField
+              id="customCommand"
+              title="Custom Command"
+              placeholder="nvim, vim, emacs..."
+              info="Enter your custom command"
+              value={customCommand}
+              onChange={setCustomCommand}
             />
-          ))}
-        </Form.Dropdown>
+          )}
+        </>
       )}
 
       <Form.Dropdown

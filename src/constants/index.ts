@@ -3,6 +3,10 @@ import { Icon, Keyboard } from "@raycast/api";
 // Re-export icons
 export { Icons } from "./icons";
 
+// Re-export AI tools
+export { AI_TOOL_DEFINITIONS, KNOWN_AI_COMMANDS, getCommandIcon } from "./ai-tools";
+export type { AIToolDefinition } from "./ai-tools";
+
 // ============================================
 // Storage Keys
 // ============================================

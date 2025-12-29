@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
 import { getApplications } from "@raycast/api";
+import { useCachedPromise } from "@raycast/utils";
 import { AppInfo } from "../types";
 
 // ============================================
@@ -51,53 +51,6 @@ const SUPPORTED_IDES: { bundleId: string; name: string }[] = [
 ];
 
 // ============================================
-// useApplications Hook
-// ============================================
-
-interface UseApplicationsReturn {
-  applications: AppInfo[];
-  isLoading: boolean;
-}
-
-export function useApplications(): UseApplicationsReturn {
-  const [applications, setApplications] = useState<AppInfo[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadApplications() {
-      setIsLoading(true);
-      try {
-        const installedApps = await getApplications();
-        const installedBundleIds = new Set(installedApps.map((app) => app.bundleId).filter(Boolean));
-
-        // Filter: only show supported IDEs that are installed
-        const availableIDEs = SUPPORTED_IDES.filter((ide) => installedBundleIds.has(ide.bundleId));
-
-        // Get full app info (path)
-        const appInfos: AppInfo[] = availableIDEs.map((ide) => {
-          const installedApp = installedApps.find((app) => app.bundleId === ide.bundleId);
-          return {
-            name: ide.name,
-            bundleId: ide.bundleId,
-            path: installedApp?.path || "",
-          };
-        });
-
-        setApplications(appInfos);
-      } catch (error) {
-        console.error("Failed to load applications:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    loadApplications();
-  }, []);
-
-  return { applications, isLoading };
-}
-
-// ============================================
 // Supported Terminals (whitelist)
 // ============================================
 
@@ -105,7 +58,7 @@ const SUPPORTED_TERMINALS: { bundleId: string; name: string }[] = [
   // macOS built-in
   { bundleId: "com.apple.Terminal", name: "Terminal" },
 
-  // Popular terminals (cross-platform)
+  // Popular terminals
   { bundleId: "com.googlecode.iterm2", name: "iTerm" },
   { bundleId: "dev.warp.Warp-Stable", name: "Warp" },
   { bundleId: "com.github.wez.wezterm", name: "WezTerm" },
@@ -114,57 +67,77 @@ const SUPPORTED_TERMINALS: { bundleId: string; name: string }[] = [
   { bundleId: "com.mitchellh.ghostty", name: "Ghostty" },
   { bundleId: "io.alacritty", name: "Alacritty" },
   { bundleId: "com.panic.Prompt3", name: "Prompt" },
-
-  // Windows terminals
-  { bundleId: "Microsoft.WindowsTerminal", name: "Windows Terminal" },
-  { bundleId: "Microsoft.WindowsTerminal.Preview", name: "Windows Terminal Preview" },
-  { bundleId: "Microsoft.PowerShell", name: "PowerShell" },
-  { bundleId: "Microsoft.Cmd", name: "Command Prompt" },
 ];
 
 // ============================================
-// useTerminals Hook
+// Fetch and Filter Applications
 // ============================================
+
+async function fetchFilteredApps(
+  supportedApps: { bundleId: string; name: string }[]
+): Promise<AppInfo[]> {
+  const installedApps = await getApplications();
+  const installedBundleIds = new Set(
+    installedApps.map((app) => app.bundleId).filter(Boolean)
+  );
+
+  return supportedApps
+    .filter((app) => installedBundleIds.has(app.bundleId))
+    .map((app) => {
+      const installedApp = installedApps.find((a) => a.bundleId === app.bundleId);
+      return {
+        name: app.name,
+        bundleId: app.bundleId,
+        path: installedApp?.path || "",
+      };
+    });
+}
+
+// Stable function references for useCachedPromise
+async function fetchIDEs(): Promise<AppInfo[]> {
+  return fetchFilteredApps(SUPPORTED_IDES);
+}
+
+async function fetchTerminals(): Promise<AppInfo[]> {
+  return fetchFilteredApps(SUPPORTED_TERMINALS);
+}
+
+// ============================================
+// Public Hooks
+// ============================================
+
+interface UseApplicationsReturn {
+  applications: AppInfo[];
+  isLoading: boolean;
+  refresh: () => void;
+}
+
+export function useApplications(): UseApplicationsReturn {
+  const { data, isLoading, revalidate } = useCachedPromise(fetchIDEs, [], {
+    keepPreviousData: true,
+  });
+
+  return {
+    applications: data ?? [],
+    isLoading,
+    refresh: revalidate,
+  };
+}
 
 interface UseTerminalsReturn {
   terminals: AppInfo[];
   isLoading: boolean;
+  refresh: () => void;
 }
 
 export function useTerminals(): UseTerminalsReturn {
-  const [terminals, setTerminals] = useState<AppInfo[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data, isLoading, revalidate } = useCachedPromise(fetchTerminals, [], {
+    keepPreviousData: true,
+  });
 
-  useEffect(() => {
-    async function loadTerminals() {
-      setIsLoading(true);
-      try {
-        const installedApps = await getApplications();
-        const installedBundleIds = new Set(installedApps.map((app) => app.bundleId).filter(Boolean));
-
-        // Filter: only show supported terminals that are installed
-        const availableTerminals = SUPPORTED_TERMINALS.filter((terminal) => installedBundleIds.has(terminal.bundleId));
-
-        // Get full app info (path)
-        const appInfos: AppInfo[] = availableTerminals.map((terminal) => {
-          const installedApp = installedApps.find((app) => app.bundleId === terminal.bundleId);
-          return {
-            name: terminal.name,
-            bundleId: terminal.bundleId,
-            path: installedApp?.path || "",
-          };
-        });
-
-        setTerminals(appInfos);
-      } catch (error) {
-        console.error("Failed to load terminals:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    loadTerminals();
-  }, []);
-
-  return { terminals, isLoading };
+  return {
+    terminals: data ?? [],
+    isLoading,
+    refresh: revalidate,
+  };
 }

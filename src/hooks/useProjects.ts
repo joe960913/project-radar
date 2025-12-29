@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
 import { showToast, Toast } from "@raycast/api";
+import { useCachedPromise, useCachedState } from "@raycast/utils";
 import { Project } from "../types";
 import {
   getProjects,
@@ -85,11 +86,6 @@ function calculateSmartScore(project: Project, now: number): number {
 // useProjects Hook
 // ============================================
 
-interface UseProjectsOptions {
-  /** Enable dynamic sorting controls. Default: true */
-  enableSortControls?: boolean;
-}
-
 interface UseProjectsReturn {
   projects: Project[];
   groups: string[];
@@ -101,52 +97,37 @@ interface UseProjectsReturn {
   toggleFavorite: (project: Project) => Promise<void>;
 }
 
-export function useProjects(options: UseProjectsOptions = {}): UseProjectsReturn {
-  const { enableSortControls = true } = options;
+export function useProjects(): UseProjectsReturn {
+  // Persist sort option across sessions
+  const [sortBy, setSortBy] = useCachedState<SortOption>("projects-sort-option", "smart");
 
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [groups, setGroups] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<SortOption>("smart");
+  // Fetch projects with caching
+  const {
+    data: projectsData,
+    isLoading: projectsLoading,
+    revalidate: revalidateProjects,
+  } = useCachedPromise(getProjects, [], { keepPreviousData: true });
 
-  const loadProjects = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const [storedProjects, storedGroups] = await Promise.all([getProjects(), getGroupsStorage()]);
-      setProjects(sortProjects(storedProjects, sortBy));
-      setGroups(storedGroups);
-    } catch (error) {
-      console.error("Failed to load projects:", error);
-      await showToast({
-        style: Toast.Style.Failure,
-        title: "Failed to load projects",
-        message: String(error),
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [sortBy]);
+  // Fetch groups with caching
+  const {
+    data: groupsData,
+    isLoading: groupsLoading,
+    revalidate: revalidateGroups,
+  } = useCachedPromise(getGroupsStorage, [], { keepPreviousData: true });
 
-  useEffect(() => {
-    loadProjects();
-  }, [loadProjects]);
-
-  // Re-sort when sortBy changes (only when sort controls are enabled)
-  useEffect(() => {
-    if (enableSortControls && projects.length > 0) {
-      setProjects((prev) => sortProjects([...prev], sortBy));
-    }
-  }, [sortBy, enableSortControls]);
+  const projects = sortProjects(projectsData ?? [], sortBy);
+  const groups = groupsData ?? [];
+  const isLoading = projectsLoading || groupsLoading;
 
   const refresh = useCallback(async () => {
-    await loadProjects();
-  }, [loadProjects]);
+    await Promise.all([revalidateProjects(), revalidateGroups()]);
+  }, [revalidateProjects, revalidateGroups]);
 
   const deleteProject = useCallback(
     async (project: Project): Promise<boolean> => {
       const success = await removeProject(project.id);
       if (success) {
-        await loadProjects();
+        await refresh();
         await showToast({
           style: Toast.Style.Success,
           title: "Project deleted",
@@ -155,20 +136,20 @@ export function useProjects(options: UseProjectsOptions = {}): UseProjectsReturn
       }
       return success;
     },
-    [loadProjects],
+    [refresh]
   );
 
   const toggleFavorite = useCallback(
     async (project: Project): Promise<void> => {
       const isFavorite = await toggleFavoriteStorage(project.id);
-      await loadProjects();
+      await refresh();
       await showToast({
         style: Toast.Style.Success,
         title: isFavorite ? "Added to favorites" : "Removed from favorites",
         message: project.alias,
       });
     },
-    [loadProjects],
+    [refresh]
   );
 
   return {
