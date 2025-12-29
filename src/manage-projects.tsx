@@ -1,8 +1,9 @@
 import { ActionPanel, Action, List, confirmAlert, Alert } from "@raycast/api";
 import { useProjects } from "./hooks/useProjects";
 import { ProjectForm } from "./components";
-import { SHORTCUTS, Icons, getIconForGroup } from "./constants";
+import { SHORTCUTS, Icons } from "./constants";
 import { Project } from "./types";
+import { formatSubtitle, getAccessories, getProjectIconPath, getProjectKeywords } from "./utils/project";
 
 // ============================================
 // Manage Projects Command
@@ -49,116 +50,59 @@ export default function ManageProjects() {
           }
         />
       ) : (
-        projects.map((project) => {
-          const iconPath =
-            project.openMode === "terminal" && project.terminal?.path ? project.terminal.path : project.app.path;
-          return (
-            <List.Item
-              key={project.id}
-              icon={{ fileIcon: iconPath }}
-              title={project.alias}
-              subtitle={formatSubtitle(project)}
-              keywords={[project.alias, project.app.name, project.group, ...project.paths].filter(Boolean) as string[]}
-              accessories={getAccessories(project)}
-              actions={
-                <ActionPanel>
-                  <ActionPanel.Section>
-                    <Action.Push
-                      icon={Icons.Pencil}
-                      title="Edit Project"
-                      target={<ProjectForm project={project} groups={groups} onSave={refresh} />}
-                    />
-                    <Action
-                      icon={project.isFavorite ? Icons.StarFilled : Icons.Star}
-                      title={project.isFavorite ? "Remove from Favorites" : "Add to Favorites"}
-                      shortcut={SHORTCUTS.TOGGLE_FAVORITE}
-                      onAction={() => handleToggleFavorite(project)}
-                    />
-                    <Action.Push
-                      icon={Icons.Plus}
-                      title="Add Project"
-                      shortcut={SHORTCUTS.ADD_PROJECT}
-                      target={<ProjectForm groups={groups} onSave={refresh} />}
-                    />
-                  </ActionPanel.Section>
+        projects.map((project) => (
+          <List.Item
+            key={project.id}
+            icon={{ fileIcon: getProjectIconPath(project) }}
+            title={project.alias}
+            subtitle={formatSubtitle(project)}
+            keywords={getProjectKeywords(project)}
+            accessories={getAccessories(project)}
+            actions={
+              <ActionPanel>
+                <ActionPanel.Section>
+                  <Action.Push
+                    icon={Icons.Pencil}
+                    title="Edit Project"
+                    target={<ProjectForm project={project} groups={groups} onSave={refresh} />}
+                  />
+                  <Action
+                    icon={Icons.Star}
+                    title={project.isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+                    shortcut={SHORTCUTS.TOGGLE_FAVORITE}
+                    onAction={() => handleToggleFavorite(project)}
+                  />
+                  <Action.Push
+                    icon={Icons.Plus}
+                    title="Add Project"
+                    shortcut={SHORTCUTS.ADD_PROJECT}
+                    target={<ProjectForm groups={groups} onSave={refresh} />}
+                  />
+                </ActionPanel.Section>
 
-                  <ActionPanel.Section>
-                    <Action.ShowInFinder path={project.paths[0]} shortcut={SHORTCUTS.SHOW_IN_FINDER} />
-                    <Action.CopyToClipboard
-                      title="Copy Path"
-                      content={project.paths.join("\n")}
-                      shortcut={SHORTCUTS.COPY_PATH}
-                    />
-                  </ActionPanel.Section>
+                <ActionPanel.Section>
+                  <Action.ShowInFinder path={project.paths[0]} shortcut={SHORTCUTS.SHOW_IN_FINDER} />
+                  <Action.CopyToClipboard
+                    title="Copy Path"
+                    content={project.paths.join("\n")}
+                    shortcut={SHORTCUTS.COPY_PATH}
+                  />
+                </ActionPanel.Section>
 
-                  <ActionPanel.Section>
-                    <Action
-                      icon={Icons.Trash}
-                      title="Delete Project"
-                      style={Action.Style.Destructive}
-                      shortcut={SHORTCUTS.DELETE_PROJECT}
-                      onAction={() => handleDelete(project)}
-                    />
-                  </ActionPanel.Section>
-                </ActionPanel>
-              }
-            />
-          );
-        })
+                <ActionPanel.Section>
+                  <Action
+                    icon={Icons.Trash}
+                    title="Delete Project"
+                    style={Action.Style.Destructive}
+                    shortcut={SHORTCUTS.DELETE_PROJECT}
+                    onAction={() => handleDelete(project)}
+                  />
+                </ActionPanel.Section>
+              </ActionPanel>
+            }
+          />
+        ))
       )}
     </List>
   );
-}
-
-// ============================================
-// Helper Functions
-// ============================================
-
-function formatSubtitle(project: Project): string {
-  const path = project.paths[0];
-  const home = process.env.HOME || "";
-
-  // Convert to relative path from home
-  const relativePath = path.startsWith(home) ? "~" + path.slice(home.length) : path;
-
-  // Remove the last component if it matches the alias (avoid repetition)
-  const parts = relativePath.split("/");
-  const lastPart = parts[parts.length - 1];
-
-  if (lastPart.toLowerCase() === project.alias.toLowerCase()) {
-    // Show parent path instead
-    return parts.slice(0, -1).join("/");
-  }
-
-  return relativePath;
-}
-
-function getAccessories(project: Project): List.Item.Accessory[] {
-  const accessories: List.Item.Accessory[] = [];
-
-  // Favorite indicator (text only, minimal)
-  if (project.isFavorite) {
-    accessories.push({
-      tag: { value: "★", color: "#FFD700" },
-      tooltip: "Favorite",
-    });
-  }
-
-  // Group icon only
-  if (project.group) {
-    accessories.push({
-      icon: getIconForGroup(project.group, project.groupIcon),
-      tooltip: `Group: ${project.group}`,
-    });
-  }
-
-  // Path count (if multiple)
-  if (project.paths.length > 1) {
-    accessories.push({
-      text: `${project.paths.length} paths`,
-      tooltip: `${project.paths.length} paths`,
-    });
-  }
-
-  return accessories;
 }

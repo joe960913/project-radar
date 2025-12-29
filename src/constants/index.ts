@@ -78,12 +78,18 @@ export function getIconForGroup(groupName: string, customIcon?: string): Icon {
 // IDE Multi-Workspace Support
 // ============================================
 
-// IDEs that support opening multiple folders in a single window
-export const MULTI_WORKSPACE_IDES: Record<string, boolean> = {
+/**
+ * Known IDE bundle IDs and their multi-workspace support status.
+ * true = supports opening multiple folders in a single window
+ * false = one project per window
+ */
+export const MULTI_WORKSPACE_IDES = {
   // VS Code family - supports .code-workspace
   "com.microsoft.VSCode": true,
   "com.microsoft.VSCodeInsiders": true,
   "com.todesktop.230313mzl4w4u92": true, // Cursor
+  "com.exafunction.windsurf": true, // Windsurf (Codeium)
+  "com.trae.app": true, // Trae (ByteDance)
   "com.vscodium": true,
 
   // Sublime Text - supports multi-folder projects
@@ -109,6 +115,9 @@ export const MULTI_WORKSPACE_IDES: Record<string, boolean> = {
   "com.google.android.studio": false,
   "org.vim.MacVim": false,
 } as const;
+
+/** Known IDE bundle ID type */
+export type KnownIdeBundleId = keyof typeof MULTI_WORKSPACE_IDES;
 
 // Check if an IDE supports multi-workspace
 export function supportsMultiWorkspace(bundleId: string): boolean {

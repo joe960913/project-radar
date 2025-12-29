@@ -10,6 +10,12 @@ const SUPPORTED_IDES: { bundleId: string; name: string }[] = [
   // Cursor
   { bundleId: "com.todesktop.230313mzl4w4u92", name: "Cursor" },
 
+  // Windsurf (Codeium)
+  { bundleId: "com.exafunction.windsurf", name: "Windsurf" },
+
+  // Trae (ByteDance)
+  { bundleId: "com.trae.app", name: "Trae" },
+
   // VS Code
   { bundleId: "com.microsoft.VSCode", name: "Visual Studio Code" },
   { bundleId: "com.microsoft.VSCodeInsiders", name: "VS Code Insiders" },

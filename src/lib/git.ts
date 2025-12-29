@@ -31,7 +31,8 @@ export function getGitStatus(path: string): GitStatus {
       ahead,
       behind,
     };
-  } catch {
+  } catch (error) {
+    console.error(`Failed to get git status for ${path}:`, error);
     return { isGitRepo: false };
   }
 }

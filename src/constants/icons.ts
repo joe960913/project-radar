@@ -4,6 +4,10 @@ import { Icon } from "@raycast/api";
 // Raycast Built-in Icons
 // ============================================
 
+/**
+ * Centralized icon mappings for consistent usage across the app.
+ * Using semantic names that describe purpose, not appearance.
+ */
 export const Icons = {
   // Actions
   Plus: Icon.Plus,
@@ -14,17 +18,14 @@ export const Icons = {
   // Navigation / UI
   Document: Icon.Document,
   Folder: Icon.Folder,
-  FolderOpen: Icon.Folder,
   ArrowSquareOut: Icon.ArrowNe,
   Minus: Icon.Minus,
 
   // Favorites
   Star: Icon.Star,
-  StarFilled: Icon.Star,
 
   // Git
   GitBranch: Icon.Terminal,
-  GitDiff: Icon.Document,
 
   // Status indicators
   Circle: Icon.Circle,
